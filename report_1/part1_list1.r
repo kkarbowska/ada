@@ -1,7 +1,11 @@
 library(tidyverse)
 library(here)
 library(ggmosaic)
-setwd(paste(here(), "/report_1", sep = ""))
+#setwd(paste(here(), "/report_1", sep = "")) # działa w VSCode
+katalog = dirname(normalizePath(file.choose())) # wybiera sie plik na którym chcemy pracować, i najlepiej ten w którym są dane
+setwd(katalog)
+
+
 
 
 ###################### ZADANIE 1 #################################################
@@ -10,7 +14,7 @@ setwd(paste(here(), "/report_1", sep = ""))
 # wystepuja braki w danych.
 
 # wczytanie danych - odrazu zmiana nazw kolumn ponieważ R nie odczytał polskich znaków
-data <- read.csv("ankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
+data <- read.csv("seankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
 #names(data) = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK')
 view(data)
 

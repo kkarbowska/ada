@@ -1,0 +1,32 @@
+---
+title: "Analiza Danych Ankietowych, Sprawozdanie 1"
+author: "Katarzyna Karbowska, Maciej Ostapiuk"
+format: pdf
+editor: visual
+---
+
+## 
+
+# 1. Wstęp
+
+## 1.1. Opis danych
+
+Analizowany zbiór danych został zadany przez prowadzącego wykład "Analiza Danych Ankietowych". Dane dotyczą ankiety przeprowadzonej w pewnej dużej agencji reklamowej, która miała na celu ocenę satysfakcji z pracy. Wiadomo że w ankiecie wzięło udział dwieście losowo wybranych osób. W tym zestawie znajduje się osiem następujących zmiennych, będących odpowiedziami na poszczególne pytania:
+
+-   **DZIAŁ** - jest odpowiedzią na pytanie "W jakim dziale jesteś zatrudniony", przyjmuje wartości **HR** (Dział obsługi kadrowo-płacowej), **IT** (Dział utrzymania sieci i systemów informatycznych), **DK** (Dział Kreatywny) lub **DS** (Dział Strategii)
+
+-    **STAŻ**  - zmienna odpowiadająca na pytanie "Jak długo pracujesz w firmie?", przyjmująca wartości **1** (poniżej 1 roku), **2** (Między jednym rokiem a trzema latami), **3** (Powyżej trzech lat)
+
+-   **CZY_KIER** - zmienna będąca odpowiedzią na pytanie "Czy pracujesz na stanowisku menedżerskim?", przyjmująca wartości **Tak** (osoba jest na stanowisku menedżerskim) lub **Nie** (osoba obejmuje inne stanowisko niż menedżerskie)
+
+-   **PYT_1 -** stanowi odpowiedź na pytanie "Jak bardzo zgadzasz się ze stwierdzeniem, że firma pozwala na elastyczne godziny pracy tym samym umożliwiając zachowanie równowagi między pracą a życiem prywatnym?", przyjmuje wartości: **-2** (zdecydowanie się nie zgadzam), **-1** (nie zgadzam się), **0** (nie mam zdania), **1** (zgadzam się), **2** (zdecydowanie się zgadzam)
+
+-   **PYT_2** - odpowiada zadane pytanie "Jak bardzo zgadzasz się ze stwierdzeniem, że twoje wynagrodzenie adekwatnie odzwierciedla zakres wykonywanych przez ciebie obowiązków? i przyjmuje odpowiednie wartości **-2** (zdecydowanie się nie zgadzam), **-1** (nie zgadzam się), **1** (zgadzam się), **2** (zgadzam się)
+
+-   **WIEK** - oznacza wiek respondenta
+
+-   **PŁEĆ** - wskazuje na płeć ankietowanego
+
+-   **PYT_3**  - jest odpowiedzią dotyczącą wynagrodzenia z pracy, po rewizji wynagrodzeń, w której część pracowników otrzymało podwyżki
+
+## 1.2. Cele 
