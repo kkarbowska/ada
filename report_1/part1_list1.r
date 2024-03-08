@@ -14,7 +14,7 @@ setwd(katalog)
 # wystepuja braki w danych.
 
 # wczytanie danych - odrazu zmiana nazw kolumn ponieważ R nie odczytał polskich znaków
-data <- read.csv("seankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
+data <- read.csv("ankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
 #names(data) = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK')
 view(data)
 
