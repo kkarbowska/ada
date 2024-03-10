@@ -1,5 +1,6 @@
 ---
 title: "Analiza Danych Ankietowych, Sprawozdanie 1"
+lang: pl
 author: "Katarzyna Karbowska, Maciej Ostapiuk"
 format: pdf
 editor: visual
@@ -7,6 +8,7 @@ editor: visual
 
 ```{r}
 #| echo: false
+#| warning: false
 library(tidyverse)
 library(here)
 library(ggmosaic)
@@ -34,33 +36,43 @@ Analizowany zbiór danych został zadany przez prowadzącego wykład "Analiza Da
 
 -   **PYT_3** - jest odpowiedzią dotyczącą wynagrodzenia z pracy, po rewizji wynagrodzeń, w której część pracowników otrzymało podwyżki
 
-## Część I
+# 2. Wykonanie zadań z części I
 
-### Zadanie 1.
+## 2.1. Zadanie 1
 
 **Wczytaj dane i przygotuj je do analizy. Zadbaj o odpowiednie typy zmiennych, zweryfikuj czy przyjmują wartości zgodne z powyższym opisem, zbadaj czy nie występują braki w danych.**
 
 ```{r}
+#| echo: false
+#| warning: false
 katalog = dirname(normalizePath(file.choose())) # wybiera sie plik na którym chcemy pracować i najlepiej ten w którym są dane
 setwd(katalog)
-data <- read.csv("ankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
-#names(data) = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK')
-view(data)
+```
+
+```{r}
+#| warning: false
+data <- read.csv("ankieta.csv", sep = ';', 
+                 col.names = c('DZIAL', 'STAZ', 
+                               'CZY_KIER', 'PYT_1', 
+                               'PYT_2', 'PYT_3', 
+                               'PLEC', 'WIEK'))
 ```
 
 Sprawdźmy teraz czy wartości w kolumnach są przyjmowane wedle opisu tabeli.
 
 ```{r}
-sort(unique(data$DZIAL))    # ok! przyjmuje wartości DK, DS, HR, IT
-sort(unique(data$STAZ))     # ok! przyjmuje wartości 1, 2, 3
-unique(data$CZY_KIER)       # ok! przyjmuje wartośći TAK LUB NIE
-sort(unique(data$PYT_1))    # ok! przyjmuje wartosci -2, -1, 0, 1, 2
-sort(unique(data$PYT_2))    # ok! przyjmuje wartosci -2, -1, 1, 2
+#| warning: false
+sort(unique(data$DZIAL))    
+sort(unique(data$STAZ))     
+unique(data$CZY_KIER)      
+sort(unique(data$PYT_1))  
+sort(unique(data$PYT_2))
 ```
 
 Widzimy, że zmienne przyjmują wartości zgodne z opisem. Zobaczmy na ilość braków danych w poszczególnych kolumnach.
 
 ```{r}
+#| warning: false
 data %>% sapply(function(x) sum(is.na(x)))
 ```
 
@@ -70,45 +82,46 @@ NIe mamy żadnych braków w danych. Pozostaje nam sprawdzić jeszcze typy danych
 str(data)
 ```
 
-### Zadanie 2
+## 2.2. Zadanie 2
 
 **Utwórz zmienną *WIEK_KAT* przeprowadzając kategoryzacje zmiennej WIEK korzysatając z następujących przedziałów: do 35 lat, między 36 a 45 lat, między 46 a 55 lat, powyżej 55 lat.**
 
 ```{r}
+#| warning: false
 przedzialy_wiekowe <- c(0, 35, 45, 55, Inf)
 nazwy_kategori <- c("0-35", "36-45", "46-55", "55+")
 data$WIEK_KAT <- cut(data$WIEK, przedzialy_wiekowe, labels = nazwy_kategori, include.lowest = TRUE)
-view(data)
 ```
 
-### Zadanie 3
+## 2.3. Zadanie 3
 
 **Sporządź tablice liczności dla zmiennych: *DZIAŁ*, *STAZ*, *CZY_KIER*, *PŁEC*, *WIEK_KAT***.
 
 ```{r}
+#| warning: false
 amount_dzial <- data %>% group_by(DZIAL) %>% summarise(ile = n())
-view(amount_dzial)
-
 amount_staz <- data %>% group_by(STAZ) %>% summarise(ile = n())
-view(amount_staz)
-
 amount_czy_kier <- data %>% group_by(CZY_KIER) %>% summarise(ile = n())
-view(amount_czy_kier)
-
 amount_plec <- data %>% group_by(PLEC) %>% summarise(ile = n())
-view(amount_plec)
-
 amount_wiek_kat <- data %>% group_by(WIEK_KAT) %>% summarise(ile = n())
-view(amount_wiek_kat)
 ```
 
-### Zadanie 4
+Przykładowo wyświetlimy jedną z nich - tablice liczności zmiennej DZIAL.
+
+```{r}
+#| warning: false
+#| echo: false
+knitr::kable(amount_dzial)
+```
+
+## 2.4. Zadanie 4
 
 **Sporządź wykresy kołowe oraz wykresy słupkowe dla zmiennych: *PYT_1* oraz *PYT_2***.
 
 Najpierw sporządźmy wykresy słupkowe. Mamy:
 
 ```{r}
+#| warning: false
 kolory <- c("#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854") 
 
 # zmienna PYT_1
@@ -118,8 +131,12 @@ data %>%
   xlab('Odpowiedzi') + 
   ylab('Liczba obserwacji') +
   ggtitle('Wykres słupkowy zmiennej PYT_1', 
-          subtitle = '"Jak bardzo zgadzasz się ze stwierdzeniem, że firma pozwala na elastyczne \ngodziny pracy tym samym umożliwiając zachowanie równowagi między pracą \na życiem prywatnym?"') +
-  scale_x_discrete(labels = c("zdecydowanie się \n nie zgadzam", "nie zgadzam się", "nie mam zdania", "zgadzam się", "zdecydowanie \n się zgadzam")) +
+          subtitle = '"Jak bardzo zgadzasz się ze stwierdzeniem, że firma pozwala na \nelastyczne godziny pracy tym samym umożliwiając \nzachowanie równowagi między pracą \na życiem prywatnym?"') +
+  scale_x_discrete(labels = c("zdecydowanie się \n nie zgadzam", 
+                              "nie zgadzam się", 
+                              "nie mam zdania", 
+                              "zgadzam się", 
+                              "zdecydowanie \n się zgadzam")) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
 
@@ -130,20 +147,28 @@ data %>%
   xlab('Odpowiedzi') + 
   ylab('Liczba obserwacji') +
   ggtitle('Wykres słupkowy zmiennej PYT_2', 
-          subtitle = '"Jak bardzo zgadzasz się ze stwierdzeniem, że twoje wynagrodzenie adekwatnie \nodzwierciedla zakres wykonywanych przez ciebie obowiązków?"') +
-  scale_x_discrete(labels = c("zdecydowanie się \n nie zgadzam", "nie zgadzam się", "zgadzam się", "zdecydowanie \n się zgadzam"))
+          subtitle = '"Jak bardzo zgadzasz się ze stwierdzeniem, że twoje wynagrodzenie \nadekwatnie odzwierciedla zakres wykonywanych \nprzez ciebie obowiązków?"') +
+  scale_x_discrete(labels = c("zdecydowanie się \n nie zgadzam", 
+                              "nie zgadzam się", 
+                              "zgadzam się", 
+                              "zdecydowanie \n się zgadzam"))
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
 
 Następnie, podane wizualizacje przedstawmy w postaci wykresów kołowych.
 
 ```{r}
+#| warning: false
 data %>% 
     ggplot(aes(x = '', fill = factor(PYT_1))) +
     geom_bar(color = 'white') +
     scale_fill_manual(values = kolory,
                       name = 'Odpowiedzi',
-                      labels = c("zdecydowanie się nie zgadzam", "nie zgadzam się", "nie mam zdania", "zgadzam się", "zdecydowanie się zgadzam")) +
+                      labels = c("zdecydowanie się nie zgadzam", 
+                                 "nie zgadzam się", 
+                                 "nie mam zdania", 
+                                 "zgadzam się", 
+                                 "zdecydowanie się zgadzam")) +
     coord_polar('y', start = pi / 2) +
     labs(title = 'Wykres kołowy dla zmiennej PYT_1') +
     theme_void()
@@ -155,40 +180,45 @@ data %>%
   geom_bar(color = 'white') +
   scale_fill_manual(values = kolory,
                     name = 'Odpowiedzi',
-                    labels = c("zdecydowanie się nie zgadzam", "nie zgadzam się", "zgadzam się", "zdecydowanie się zgadzam")) +
+                    labels = c("zdecydowanie się nie zgadzam", 
+                               "nie zgadzam się", 
+                               "zgadzam się", 
+                               "zdecydowanie się zgadzam")) +
   coord_polar('y', start = pi / 2) +
   labs(title = 'Wykres kołowy dla zmiennej PYT_2') +
   theme_void()
 
 ```
 
-### Zadanie 5
+## 2.5. Zadanie 5
 
 **Sporządź tablice wielodzielcze dla par zmiennych: *PYT_1* i *DZIAL*, *PYT_1* i *STAŻ*, *PYT_1* i *CZY_KIER*, *PYT_1* i *PŁEC* oraz *PYT_1* i *WIEK_KAT***.
 
 Wywołamy przykładowo jedną z tablic- dla zmiennych ***PYT_1*** i ***DZIAL***.
 
 ```{r}
+#| warning: false
 crosstab_dzial_pyt1 <-table(data$DZIAL, data$PYT_1)
-print(crosstab_dzial_pyt1)
+knitr::kable(crosstab_dzial_pyt1)
 crosstab_staz_pyt1  <-table(data$STAZ, data$PYT_1)
 crosstab_staz_czy_kier_pyt1 <-table(data$CZY_KIER, data$PYT_1)
 crosstab_staz_płeć_pyt1 <-table(data$PLEC, data$PYT_1)
 crosstab_staz_wiek_kat_pyt1 <-table(data$WIEK_KAT, data$PYT_1)
 ```
 
-### Zadanie 6
+## 2.6. Zadanie 6
 
 **Sporządź tablice wielodzielczą dla pary zmiennych: *PYT_2* i *PYT_3.***
 
 To zadanie rozwiązujemy podobnie, jak zadanie 5. Uzyskujemy:
 
 ```{r}
+#| warning: false
 crosstab_staz_wiek_kat_pyt1 <-table(data$PYT_2, data$PYT_3)
-print(crosstab_staz_wiek_kat_pyt1)
+knitr::kable(crosstab_staz_wiek_kat_pyt1)
 ```
 
-### Zadanie 7
+## 2.7. Zadanie 7
 
 **Utwórz zmienną *CZY_ZADOW* na podstawie zmiennej *PYT_1*, łącząc kategorie "nie zgadzam się" i "zdecydowanie się nie zgadzam" oraz "zgadzam się" i "zdecydowanie się zgadzam".**
 
@@ -201,66 +231,71 @@ W naszym podejściu zmienna ***CZY_ZADOW*** przyjmuje następujące wartości:
 -   -1- osoba jest niezadowolona.
 
 ```{r}
+#| warning: false
 data <- mutate(data, CZY_ZADOW = ifelse(PYT_1 <0, "-1",
                                         ifelse(PYT_1 == 0, "0",
                                                ifelse(WIEK>0, "1", "_"))))
-view(data)
 ```
 
-### Zadanie 8.
+## 2.8. Zadanie 8
 
 Sporządź wykresy mozaikowe odpowiadające parom zmiennych: ***CZY_ZADOW*** i ***DZIAŁ***, ***CZY_ZADOW*** i ***STAZ***, ***CZY_ZADOW*** i ***CZY_KIER***, ***CZY_ZADOW*** i ***PLEC*** oraz ***CZY_ZADOW*** i ***WIEK_KAT***. Czy na podstawie uzyskanych wykresów można postawić pewne hipotezy dotyczące relacji między powyższymi zmiennymi? Spróbuj sformułować kilka takich hipotez.
 
 ```{r}
+#| warning: false
 data %>% ggplot() +
   geom_mosaic(aes(x = product(CZY_ZADOW,DZIAL)), fill='#66c2a5') +
   ylab("Czy osoba jest zadowolona") + 
   xlab("Dział") + 
-  ggtitle("Zadowolenie w zależności od działu ankietowanych osób") +
+  ggtitle("Zadowolenie w zależności \nod działu ankietowanych osób") +
   theme_mosaic()
 ```
 
-Zauważmy, że największy odsetek osób zadowolonych ze swojej sytuacji badaej w firmie przypada na dział IT. Nic w tym dziwnego- zarobki są atrakcyjne oraz sama praca z reguły jest dla osób, które w tej pracy lubią się spełniać- praca w dziale komunikacji jest łatwiej "dostępna" i osiągalna, co niesie za sobą ryzyko związane z tym, że ludzie tam pracujący nie robią tego z pasji.
+Zauważmy, że największy odsetek osób zadowolonych ze swojej sytuacji badanej w firmie przypada na dział IT. Nic w tym dziwnego - zarobki są atrakcyjne oraz sama praca z reguły jest dla osób, które w tej pracy lubią się spełniać - praca w dziale komunikacji jest łatwiej "dostępna" i osiągalna, co niesie za sobą ryzyko związane z tym, że ludzie tam pracujący nie robią tego z pasji.
 
 ```{r}
+#| warning: false
 data %>% ggplot() +
   geom_mosaic(aes(x = product(CZY_ZADOW, STAZ)), fill='#66c2a5') +
   ylab("Czy osoba jest zadowolona") + 
   xlab("Długość stażu") + 
-  ggtitle("Zadowolenie w zależności od długości stażu ankietowanych osób") + 
+  ggtitle("Zadowolenie w zależności od długości \nstażu ankietowanych osób") + 
   theme_mosaic()
 ```
 
 Z kolei tutaj zauważamy największe zadowolenie wśród stażystów ze stażem w długości od roku do 3 lat. Jest to dosyć długi czas, jak na staż, jednakże może być to związane z poczuciem integralności w firmie, reputacja na swój temat oraz swojej pozycji w firmie rośnie. Stażyści powyżej 3 lat mają podzielone zdania- jest to już bardzo długi okres jeżeli chodzi o stanowiska stażowe, pracownicy z pewnością chcieliby zostać bardziej docenieni, bardziej poważani wśród innych pracowników.
 
 ```{r}
+#| warning: false
 data %>% ggplot() +
   geom_mosaic(aes(x = product(CZY_ZADOW,CZY_KIER)), fill='#66c2a5') +
   ylab("Czy osoba jest zadwolona") + 
   xlab("Czy osoba jest kierownikiem") + 
-  ggtitle("Zadowolenie w zależności od bycia na stanowisku kierowniczym \n wśród ankietowanych osób") +
+  ggtitle("Zadowolenie w zależności od bycia na \nstanowisku kierowniczym \n wśród ankietowanych osób") +
   theme_mosaic()
 ```
 
 Zdecydowanie widzimy wieksze, dominujące zadowolenie wśród pracowników niebędących kierownikami. Stanowiska kierownicze rządzą się oczywiście swoimi prawami, więc nie powinno to budzić wątpliwości.
 
 ```{r}
+#| warning: false
 data %>% ggplot() +
   geom_mosaic(aes(x = product(CZY_ZADOW,PLEC)), fill='#66c2a5') +
   ylab("Czy osoba jest zadowolona") + 
   xlab("Płeć") + 
-  ggtitle("Zadowolenie w zależności od płci ankietowanych osób") + 
+  ggtitle("Zadowolenie w zależności od płci \nankietowanych osób") + 
   theme_mosaic() 
 ```
 
 Jeżeli rozważymy zadowolenie w zależności od płci ankietowanych osób, to tutaj nie ma większych różnic. Zdecydowanie więcej ankietowanych to mężczyźni, jednakże odsetek osób zadowolonych wśród obu płci jest podobny. Można wnioskować o równym traktowaniu pracowników firmy.
 
 ```{r}
+#| warning: false
 data %>% ggplot() +
   geom_mosaic(aes(x = product(CZY_ZADOW,WIEK_KAT)), fill='#66c2a5') +
   ylab("Czy osoba jest zadwolona") + 
   xlab("Przedział wiekowy") + 
-  ggtitle("Zadowolenie w zależności od wieku ankietowanych osób") + 
+  ggtitle("Zadowolenie w zależności od wieku \nankietowanych osób") + 
   theme_mosaic() 
 ```
 
