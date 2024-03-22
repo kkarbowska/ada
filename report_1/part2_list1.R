@@ -9,6 +9,8 @@ setwd(katalog)
 data <- read.csv("ankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
 view(data)
 
+data <- data %>%
+  mutate_at(vars(DZIAL, STAZ, CZY_KIER, PYT_1, PYT_2, PYT_3, PLEC), as.factor)
 
 ### Część II
 ################# zadanie 2. ############################################################
@@ -18,7 +20,7 @@ view(data)
 # badanej grupie oraz w podgrupach ze względu na zmienną CZY_KIER.
 kolory <- c("#66c2a5", "#fc8d62", "#8da0cb", "#e78ac3", "#a6d854")
 
-likert_df = likert(data.frame(factor(data$PYT_1)))
+likert_df = likert(data[,"PYT_1", drop=FALSE])
 summary(likert_df)
 ### Pakiet likert służy do analizy danych przedstawionych skalą Likerta.
 ### Funkcja summary daje krótkie podsumowanie zbioru danych. 
@@ -77,7 +79,7 @@ plot(likert_df, type = 'density', facet=TRUE) +
 
 
 ## podział na podgrupy czy_kier
-subgroup_likert <- likert(data.frame(factor(data$PYT_1)), grouping = data$CZY_KIER)
+subgroup_likert <- likert(data[,"PYT_1", drop=FALSE], grouping = data$CZY_KIER)
 
 # wykres typu bar - podział na podgrupy -  tylko to potrzeba 
 plot(subgroup_likert, type = "bar") +
@@ -91,7 +93,8 @@ plot(subgroup_likert, type = "bar") +
                                "nie zgadzam się", 
                                "nie mam zdania", 
                                "zgadzam się", 
-                               "zdecydowanie się zgadzam"))
+                               "zdecydowanie się zgadzam")) + 
+  theme(legend.position = 'right')
 
 ### Na powyższym wykresie mamy podział na osoby które są menadżerem ('TAK')
 ### oraz nie piastują tego stanowiska ('NIE'). Możemy zauważyć, że 

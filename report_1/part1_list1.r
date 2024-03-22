@@ -30,7 +30,14 @@ data %>% sapply(function(x) sum(is.na(x)))
 
 # typy danych
 str(data)
+### Zauważmy, że dane DZIAŁ, STAŻ, CZY_KIER, PYT_1, PYT_2, PYT_3, PLEC 
+### zgodnie z opisem danych są zmiennymi kategorycznymi, zatem więc typ zmiennych w zbiorze danych
+### jest błędny, co należy zmienić
 
+data <- data %>%
+  mutate_at(vars(DZIAL, STAZ, CZY_KIER, PYT_1, PYT_2, PYT_3, PLEC), as.factor)
+
+str(data)
 ########################## ZADANIE 2 ##############################################
 # Utwórz zmienna WIEK_KAT przeprowadzajac kategoryzacje zmiennej WIEK korzys-
 # tajac z nastepujacych przedziałów: do 35 lat, miedzy 36 a 45 lat, miedzy 46 a 55 lat,
@@ -84,7 +91,6 @@ data %>%
   scale_x_discrete(labels = c("zdecydowanie się \n nie zgadzam", "nie zgadzam się", "nie mam zdania", "zgadzam się", "zdecydowanie \n się zgadzam")) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
-
 # zmienna PYT_2
 data %>% 
   ggplot(aes(x = factor(PYT_2), fill = factor(PYT_2))) +
@@ -121,6 +127,7 @@ data %>%
   labs(title = 'Wykres kołowy dla zmiennej PYT_2') +
   theme_void()
 
+### Z wykresu słupkowego i kołowego - najwięcej zgadza się, najmnie zdecydowanie się nie zgadzają
 
 ######################################## ZADANIE 5 ##########################################################
 ####5. Sporządź tablice wielodzielcze dla par zmiennych: PYT_1 i DZIAŁ, PYT_1 i STAŻ,
@@ -151,10 +158,12 @@ crosstab_staz_wiek_kat_pyt1 <-table(data$PYT_2, data$PYT_3)
 ### 0 - osoba "nie ma zdania"
 ### -1 - osoba jest niezadowolona
 
-data <- mutate(data, CZY_ZADOW = ifelse(PYT_1 <0, "-1",
-                                        ifelse(PYT_1 == 0, "0",
-                                               ifelse(WIEK>0, "1", "_"))))
-view(data)
+data <- mutate(data, CZY_ZADOW = ifelse(as.numeric(as.character(PYT_1)) == -2, "-1",
+                                        ifelse(as.numeric(as.character(PYT_1)) == -1, "-1",
+                                               ifelse(as.numeric(as.character(PYT_1)) == 0, "0",
+                                                      ifelse(as.numeric(as.character(PYT_1)) == 1, "1",
+                                                             ifelse(as.numeric(as.character(PYT_1)) == 2, "1", "_"))))))
+view(data) 
 
 ################################## ZADANIE 8 #############################################################
 ###Sporządź wykresy mozaikowe odpowiadające parom zmiennych: CZY_ZADOW i DZIAŁ, CZY_ZADOW i STAŻ,
