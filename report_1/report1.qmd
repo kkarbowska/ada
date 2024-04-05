@@ -232,20 +232,18 @@ knitr::kable(crosstab_staz_wiek_kat_pyt1)
 
 W naszym podejściu zmienna ***CZY_ZADOW*** przyjmuje następujące wartości:
 
--   1- osoba jest zadowolona
+-   0 - osoba jest nie zadowolona
 
--   0- osoba nie ma zdania- nie potrafi zdecydować
-
--   -1- osoba jest niezadowolona.
+-   1 - osoba jest zadowowolona
 
 ```{r}
 #| warning: false
-data <- mutate(data, 
-               CZY_ZADOW = ifelse(as.numeric(as.character(PYT_1)) == -2, "-1",
-                      ifelse(as.numeric(as.character(PYT_1)) == -1, "-1",
-                      ifelse(as.numeric(as.character(PYT_1)) == 0, "0",
-                      ifelse(as.numeric(as.character(PYT_1)) == 1, "1",
-                      ifelse(as.numeric(as.character(PYT_1)) == 2, "1", "_"))))))
+data <- mutate(data, CZY_ZADOW = ifelse(as.numeric(as.character(PYT_2)) == -2, 0,
+                                 ifelse(as.numeric(as.character(PYT_2)) == -1, 0,
+                                 ifelse(as.numeric(as.character(PYT_2)) == 1, 1,
+                          ifelse(as.numeric(as.character(PYT_2)) == 2, 1, "_")))))
+
+data$CZY_ZADOW <- as.factor(as.integer(data$CZY_ZADOW))
 ```
 
 ## 2.8. Zadanie 8
@@ -316,7 +314,7 @@ Generalnie, ułożenie wykresów mozaikowych przeważnie sugeruje na pewne wzorc
 
 # 3. Wykonanie zadań z części II
 
-## 3.1.  Zadanie 1
+## 3.1. Zadanie 1
 
 Zapoznaj się z biblioteką likert i dostępnymi tam funkcjami summary oraz plot (wykresy typu "bar", "heat" oraz "density"), a następnie zilustruj odpowiedzi na pytanie "Jak bardzo zgadzasz się ze stwierdzeniem, że firma pozwala na (...)?" (zmienna **PYT_1**) w całej badanej grupie oraz w podgrupach ze względu na zmienna **CZY_KIER**.
 
@@ -423,6 +421,7 @@ cat("Próbka wylosowana ze zwracaniem",which_row_false)
 Będziemy generować zmienne losowe z rozkładu dwumianowego metodą odwrotnej dystrybuanty.
 
 ```{r}
+#| warning: false
 set.seed(123)
 
 generate_binom <- function(n, p, N){
@@ -453,6 +452,7 @@ generate_binom <- function(n, p, N){
 Sprawdzimy działanie oraz poprawność generatora zmiennych losowych porównując charakterystyki rozkładu. Porównamy ze sobą dystrybuanty, gęstości, średnie i wariancje teoretyczne oraz empiryczne.
 
 ```{r}
+#| warning: false
 # funkcja do porównywania dystrybuant
 comparison_cdfs_binom <- function(n=20, p, size=1){
   
@@ -512,6 +512,7 @@ comparison_var_binom <- function(n=20, p, size=1){
 Dla przykładu weźmiemy sobie rozkład o wartościach parametrów rozkładu n = 20 i p = 0.1.
 
 ```{r}
+#| warning: false
 comparison_cdfs_binom(n=20, 0.1, size=1000)
 comparison_pdfs_binom(20, 0.1, size=1000)
 comparison_mean_binom(20, 0.1, size=1000)
@@ -519,4 +520,84 @@ comparison_var_binom(20, 0.1, size=1000)
 
 ```
 
-Porównania dystrybuant, gęstości oraz średniej i wariancji wskazuja na poprawność generatora zmiennych losowych.
+Zauważmy, że najważniejsze charakterystyki empiryczne i teoretyczne rozkładu są zbliżone do siebie, co wskazuje na poprawność generatora zmiennych losowych. Dodatkowo sprawdzimy naszą tezę, porównując poszczególne empiryczne prawdopodobieństwa z teoretycznymi zadanymi wartościami. Porównamy rozkładach o parametrach p 0.1, 0.5, 0.9.
+
+```{r}
+#| warning: false
+empirical_p_binom <- function(n=20, p, size=1){
+  sample <- generate_binom(n, p, size)
+  l <- length(sample)
+  p_empirical <- sum(sample)/(n*l)
+  
+  return(p_empirical)
+}
+
+theo_prob <- c(0.1, 0.5, 0.9)
+emp_prob <- sapply(theo_prob, function(p) empirical_p_binom(p = p, size=1000))
+
+```
+
+Wyniki dokonane z porównania parametru prawdopodobieństwa zostaną umieszczone w poniższej tabeli.
+
+```{r}
+#| warning: false
+compare_p <- data.frame(Wartosci_teoretyczne = theo_prob, 
+                        Wartosci_empiryczne = emp_prob)
+knitr::kable(compare_p)
+```
+
+Zauważmy że wartości empiryczne parametru p są dostatecznie bliskie wartościom teoretycznym co potwierdza naszą tezę o poprawności generatora zmiennych losowych.
+
+# 4. Wykonanie zadań z części III
+
+## 4.1. Zadanie 1
+
+**Napisz funkcje do wyznaczania realizacji przedziału ufnosci Cloppera-Pearsona. Niech argumentem wejsciowym będzie poziom ufności, liczba sukcesów i liczba prób lub poziom ufnosci i wektor danych (funkcja powinna obsługiwać oba przypadki).**
+
+```{r}
+#| warning: false
+clopper_pearson_confidence_interval <- function(confidence_level, successes=NULL, trials=NULL, vector_data=NULL) {
+  
+  if (!is.null(vector_data)) {
+    successes <- sum(vector_data)
+    trials <- length(vector_data)
+  }
+  alpha <- 1 - confidence_level
+  lower_bound <- qbeta(alpha/2, successes, trials - successes + 1)
+  upper_bound <- qbeta(1 - (alpha/2), successes + 1, trials - successes)
+  
+  return(c(lower_bound, upper_bound))
+}
+```
+
+## 4.2. Zadanie 2
+
+**Korzystając z funkcji napisanej w zadaniu 6. wyznacz realizacje przedziałów ufności dla prawdopodobieństwa, że pracownik jest zadowolony z wynagrodzenia w pierwszym badanym okresie oraz w drugim badanym okresie. Skorzystaj ze zmiennych CZY_ZADW oraz CZY_ZADW_2 (utwórz zmienną analogicznie jak w zadaniu 1.7). Przyjmij 1−α = 0.95.**
+
+Na wstępie utworzymy zmienną CZY_ZADOW_2 analogicznie jak tworzyliśmy zmienną CZY_ZADOW.
+
+```{r}
+#| warning: false
+data <- mutate(data, CZY_ZADOW_2 = ifelse(as.numeric(as.character(PYT_3)) == -2, 0,
+                                  ifelse(as.numeric(as.character(PYT_3)) == -1, 0,
+                                  ifelse(as.numeric(as.character(PYT_3)) == 1, 1,
+                          ifelse(as.numeric(as.character(PYT_3)) == 2, 1, "_")))))
+
+data$CZY_ZADOW_2 <- as.factor(as.integer(data$CZY_ZADOW_2))
+```
+
+Dalej przejdziemy do wyznaczenia liczby pracowników, którzy byli zadowoleni z wynagrodzenia w pierwszym badanym okresie oraz w drugim badanym okresie.
+
+```{r}
+#| warning: false
+sukcesy <- count(subset(data, as.integer(as.factor(data$CZY_ZADOW)) == 1 & 
+                    as.integer(as.factor(data$CZY_ZADOW_2)) == 1)) %>% as.integer()
+# sukcesy = 74, trials = 200
+```
+
+Jest `{r} sukcesy` pracowników spośród `{r} nrow(data)` , którzy byli zadowoleni z wynagrodzenia w pierwszym oraz w drugim badanym okresie. Zatem realizacja przedziału ufności Cloppera - Pearsona na poziomie ufności 0.95 ma się następująco :
+
+```{r}
+#| warning: false
+clopper_pearson_confidence_interval(confidence_level = 0.95, successes = sukcesy, trials = nrow(data))
+```
