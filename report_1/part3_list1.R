@@ -1,4 +1,5 @@
 # CZĘŚĆ TRZECIA
+library(binomCI)
 # wczytanie danych - odrazu zmiana nazw kolumn ponieważ R nie odczytał polskich znaków
 data <- read.csv("ankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
 
@@ -61,4 +62,285 @@ print(sukces)
 # Jest 74 pracowników spośród 200, którzy byli zadowoleni z wynagrodzenia w pierwszym oraz w drugim badanym okresie. Zatem przedział ufności 
 # Clopera - Pearsona na poziomie ufności 0.95 ma się następująco:
 clopper_pearson_confidence_interval(confidence_level = 0.95, successes = sukces, trials = nrow(data))
- 
+
+
+### task 9
+
+### 
+Wald_CI = function(X, n, size, alpha) {
+  p_est <- sum(X)/(n*size)
+  quantile <- qnorm(1-alpha/2, mean = 0, sd = 1)
+  lower_bound <-p_est - quantile * sqrt(p_est * (1-p_est) / n)
+  upper_bound <-p_est + quantile * sqrt(p_est * (1-p_est) / n)
+  CI <- c(lower_bound, upper_bound)
+  return(CI)
+} 
+
+
+### probabilities vector 
+p_s = seq(from=0.01, to= 0.99, length.out = 99)
+### n = 30 
+wald_res_coverage_30 = rep(0,99)
+wald_res_len_30 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 30, prob = p_s[i])
+    ##wald
+    ci_wald = Wald_CI(sample_binom, n = 30, 100, alpha = 0.05)
+    temp_len[mcs] <- ci_wald[2] - ci_wald[1]
+    temp_coverage[mcs] <-sum(ci_wald[1] < sample_binom/30& sample_binom/30<ci_wald[2])/100
+  }
+  wald_res_len_30[i] <-  mean(temp_len)
+  wald_res_coverage_30[i] <-  mean(temp_coverage)
+}
+
+plot(p_s, wald_res_len_30)
+plot(p_s, wald_res_coverage_30, type = "l")
+
+
+
+cp_res_coverage_30 = rep(0,99)
+cp_res_len_30 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 30, prob = p_s[i])
+    ##cp
+    ci_cp = binom.confint(sample_binom, n = 30,alpha = 0.05, methods = "exact")
+    temp_len[mcs] <- mean(ci_cp$upper- ci_cp$lower)
+    temp_coverage[mcs] <-sum(mean(ci_cp$lower) < sample_binom/30& sample_binom/30<mean(ci_cp$upper))/100
+  }
+  cp_res_len_30[i] <-  mean(temp_len)
+  cp_res_coverage_30[i] <-  mean(temp_coverage)
+}
+
+plot(p_s, cp_res_len_30)
+plot(p_s, cp_res_coverage_30, type = "l")
+
+ac_res_coverage_30 = rep(0,99)
+ac_res_len_30 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 30, prob = p_s[i])
+    ##cp
+    ci_ac = binom.confint(sample_binom, n = 30,alpha = 0.05, methods = "agresti-coull")
+    temp_len[mcs] <- mean(ci_ac$upper- ci_ac$lower)
+    temp_coverage[mcs] <-sum(mean(ci_ac$lower) < sample_binom/30& sample_binom/30<mean(ci_ac$upper))/100
+  }
+  ac_res_len_30[i] <-  mean(temp_len)
+  ac_res_coverage_30[i] <-  mean(temp_coverage)
+}
+
+plot(p_s, ac_res_len_30)
+plot(p_s, ac_res_coverage_30, type = "l")
+
+
+
+
+plot(p_s,wald_res_len_30, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Average lengths of CIs for n = 30", xlab = "probability of success", ylab = "average length of CI", 
+     lty = 1, lwd = 2)
+
+lines(p_s, cp_res_len_30, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_len_30, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+
+
+
+plot(p_s,wald_res_coverage_30, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Coverage probabilities of CIs for n = 30", xlab = "probability of success", ylab = "average length of CI", 
+     lty = 1, lwd = 2,ylim = c(0.8,1))
+
+lines(p_s, cp_res_coverage_30, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_coverage_30, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+
+
+
+### n = 100
+wald_res_coverage_100 = rep(0,99)
+wald_res_len_100 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 100, prob = p_s[i])
+    ##wald
+    ci_wald = Wald_CI(sample_binom, n = 100, 100, alpha = 0.05)
+    temp_len[mcs] <- ci_wald[2] - ci_wald[1]
+    temp_coverage[mcs] <-sum(ci_wald[1] < sample_binom/100& sample_binom/100<ci_wald[2])/100
+  }
+  wald_res_len_100[i] <-  mean(temp_len)
+  wald_res_coverage_100[i] <-  mean(temp_coverage)
+}
+
+plot(p_s, wald_res_len_100)
+plot(p_s, wald_res_coverage_100, type = "l")
+
+
+
+cp_res_coverage_100 = rep(0,99)
+cp_res_len_100 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 100, prob = p_s[i])
+    ##cp
+    ci_cp = binom.confint(sample_binom, n = 100,alpha = 0.05, methods = "exact")
+    temp_len[mcs] <- mean(ci_cp$upper- ci_cp$lower)
+    temp_coverage[mcs] <-sum(mean(ci_cp$lower) < sample_binom/100& sample_binom/100<mean(ci_cp$upper))/100
+  }
+  cp_res_len_100[i] <-  mean(temp_len)
+  cp_res_coverage_100[i] <-  mean(temp_coverage)
+}
+
+plot(p_s, cp_res_len_100)
+plot(p_s, cp_res_coverage_100, type = "l")
+
+ac_res_coverage_100 = rep(0,99)
+ac_res_len_100 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 100, prob = p_s[i])
+    ##cp
+    ci_ac = binom.confint(sample_binom, n = 100,alpha = 0.05, methods = "agresti-coull")
+    temp_len[mcs] <- mean(ci_ac$upper- ci_ac$lower)
+    temp_coverage[mcs] <-sum(mean(ci_ac$lower) < sample_binom/100& sample_binom/100<mean(ci_ac$upper))/100
+  }
+  ac_res_len_100[i] <-  mean(temp_len)
+  ac_res_coverage_100[i] <-  mean(temp_coverage)
+}
+
+plot(p_s,wald_res_len_100, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Average lengths of CIs for n = 100", xlab = "probability of success", ylab = "average length of CI", 
+     lty = 1, lwd = 2)
+
+lines(p_s, cp_res_len_100, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_len_100, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+
+
+
+plot(p_s,wald_res_coverage_100, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Coverage probabilities of CIs for n = 100", xlab = "probability of success", ylab = "average length of CI", 
+     lty = 1, lwd = 2,ylim = c(0.8,1))
+
+lines(p_s, cp_res_coverage_100, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_coverage_100, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+
+
+
+### n = 1000
+wald_res_coverage_1000 = rep(0,99)
+wald_res_len_1000 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 1000, prob = p_s[i])
+    ##wald
+    ci_wald = Wald_CI(sample_binom, n = 1000, 100, alpha = 0.05)
+    temp_len[mcs] <- ci_wald[2] - ci_wald[1]
+    temp_coverage[mcs] <-sum(ci_wald[1] < sample_binom/1000& sample_binom/1000<ci_wald[2])/100
+  }
+  wald_res_len_1000[i] <-  mean(temp_len)
+  wald_res_coverage_1000[i] <-  mean(temp_coverage)
+}
+
+plot(p_s, wald_res_len_1000)
+plot(p_s, wald_res_coverage_1000, type = "l")
+
+
+
+cp_res_coverage_1000 = rep(0,99)
+cp_res_len_1000 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 1000, prob = p_s[i])
+    ##cp
+    ci_cp = binom.confint(sample_binom, n = 1000,alpha = 0.05, methods = "exact")
+    temp_len[mcs] <- mean(ci_cp$upper- ci_cp$lower)
+    temp_coverage[mcs] <-sum(mean(ci_cp$lower) < sample_binom/1000& sample_binom/1000<mean(ci_cp$upper))/100
+  }
+  cp_res_len_1000[i] <-  mean(temp_len)
+  cp_res_coverage_1000[i] <-  mean(temp_coverage)
+}
+
+plot(p_s, cp_res_len_1000)
+plot(p_s, cp_res_coverage_1000, type = "l")
+
+ac_res_coverage_1000 = rep(0,99)
+ac_res_len_1000 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 1000, prob = p_s[i])
+    ##cp
+    ci_ac = binom.confint(sample_binom, n = 1000,alpha = 0.05, methods = "agresti-coull")
+    temp_len[mcs] <- mean(ci_ac$upper- ci_ac$lower)
+    temp_coverage[mcs] <-sum(mean(ci_ac$lower) < sample_binom/1000& sample_binom/1000<mean(ci_ac$upper))/100
+  }
+  ac_res_len_1000[i] <-  mean(temp_len)
+  ac_res_coverage_1000[i] <-  mean(temp_coverage)
+}
+
+plot(p_s,wald_res_len_1000, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Average lengths of CIs for n = 1000", xlab = "probability of success", ylab = "average length of CI", 
+     lty = 1, lwd = 2)
+
+lines(p_s, cp_res_len_1000, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_len_1000, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+
+
+
+plot(p_s,wald_res_coverage_1000, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Coverage probabilities of CIs for n = 1000", xlab = "probability of success", ylab = "average length of CI", 
+     lty = 1, lwd = 2,ylim = c(0.92,1))
+
+lines(p_s, cp_res_coverage_1000, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_coverage_1000, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+

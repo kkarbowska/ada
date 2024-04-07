@@ -182,7 +182,7 @@ comparison_pdfs_binom <- function(n, p, size=1){
   
   plot(empirical_prob, type = "p", col = "blue", pch = 16, ylim = c(0, max(max(empirical_prob), max(theoretical_prob)) + 0.05),
        xlab = "x", ylab = "Probability", main = "Porównanie rozkładów prawdopodobieństwa \n rozkład dwumianowy")
-  points(x_values, theoretical_prob, col = "red", pch = 16)
+  points(x_values, theoretical_prob, col = "red",  pch = 16)
   legend("topright", legend = c("Empiryczny", "Teoretyczny"), col = c("blue", "red"), pch = 16)
 }
 
@@ -218,6 +218,51 @@ comparison_var_binom(20, 0.1, size=1000)
 
 ### Porównania dystrybuant, gęstości oraz średniej i wariancji wskazuja na poprawność
 ### generatora zmiennych losowych
+
+
+
+
+simulateMultinomial <- function(n, probs, size) {
+  res <- matrix(0, nrow = size, ncol = length(probs))
+  for (k in 1:size) {
+    probs <- probs / sum(probs)
+    
+    cumulativeProbs <- cumsum(probs)
+    
+    counts <- rep(0, length(probs))
+    
+    for (i in 1:n) {
+      rand <- runif(1)
+      
+      for (j in 1:length(cumulativeProbs)) {
+        if (rand <= cumulativeProbs[j]) {
+          counts[j] <- counts[j] + 1
+          break
+        }
+      }
+    }
+    res[k,] <- counts
+  }
+  res
+}
+n = 100
+probs_1 <- c(0.1, 0.3, 0.4, 0.2) 
+probs_2 <- c(0.5, 0.3, 0.2)
+probs_3 <- c(0.1, 0.1, 0.3, 0.2, 0.3)
+
+sample_1 <- simulateMultinomial(n, probs_1, 1000)
+sample_2 <- simulateMultinomial(n, probs_1, 1000)
+sample_3 <- simulateMultinomial(n, probs_1, 1000)
+
+estimated_probs_1 = colMeans(sample_1/n)
+estimated_probs_2 = colMeans(sample_2/n)
+estimated_probs_3 = colMeans(sample_3/n)
+
+sprintf("Estimated probabilities vector (0.1, 0.3, 0.4, 0.2): (%s).", toString(estimated_probs_1))
+sprintf("Estimated probabilities vector (0.5, 0.3, 0.2): (%s).", toString(estimated_probs_1))
+sprintf("Estimated probabilities vector (0.1, 0.1, 0.3, 0.2, 0.3): (%s).", toString(estimated_probs_1))
+estimated_probs_1
+
 
 
 
