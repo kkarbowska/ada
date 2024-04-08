@@ -96,11 +96,6 @@ for (i in 1:99) {
   wald_res_coverage_30[i] <-  mean(temp_coverage)
 }
 
-plot(p_s, wald_res_len_30)
-plot(p_s, wald_res_coverage_30, type = "l")
-
-
-
 cp_res_coverage_30 = rep(0,99)
 cp_res_len_30 = rep(0,99)
 for (i in 1:99) {
@@ -117,8 +112,6 @@ for (i in 1:99) {
   cp_res_coverage_30[i] <-  mean(temp_coverage)
 }
 
-plot(p_s, cp_res_len_30)
-plot(p_s, cp_res_coverage_30, type = "l")
 
 ac_res_coverage_30 = rep(0,99)
 ac_res_len_30 = rep(0,99)
@@ -142,17 +135,16 @@ plot(p_s, ac_res_coverage_30, type = "l")
 
 
 
-plot(p_s,wald_res_len_30, type = "l", frame = FALSE, pch = 19,
-     col = "red",main="Average lengths of CIs for n = 30", xlab = "probability of success", ylab = "average length of CI", 
-     lty = 1, lwd = 2)
-
-lines(p_s, cp_res_len_30, pch = 23, col = "blue", type = "l", 
-      lty = 2, lwd = 2)
-
-lines(p_s, ac_res_len_30, pch = 18, col = "green", type = "b", 
-      lty = 3, lwd = 2)
-
-legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+plot(p_s, wald_res_len_30, type = "l", frame = FALSE, pch = 19,
+main="Średnia długość przedziału ufności, 
+        n = 30, długość próbki = 100, 1000 MCS",
+     col = "red", xlab = "probability of success", ylab = "average length of CI", 
+     lty = 1, lwd = 2)+
+  lines(p_s, cp_res_len_30, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)+
+  lines(p_s, ac_res_len_30, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)+
+  legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
        col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
 
 
@@ -189,8 +181,7 @@ for (i in 1:99) {
   wald_res_coverage_100[i] <-  mean(temp_coverage)
 }
 
-plot(p_s, wald_res_len_100)
-plot(p_s, wald_res_coverage_100, type = "l")
+
 
 
 
@@ -210,8 +201,6 @@ for (i in 1:99) {
   cp_res_coverage_100[i] <-  mean(temp_coverage)
 }
 
-plot(p_s, cp_res_len_100)
-plot(p_s, cp_res_coverage_100, type = "l")
 
 ac_res_coverage_100 = rep(0,99)
 ac_res_len_100 = rep(0,99)
@@ -276,10 +265,6 @@ for (i in 1:99) {
   wald_res_coverage_1000[i] <-  mean(temp_coverage)
 }
 
-plot(p_s, wald_res_len_1000)
-plot(p_s, wald_res_coverage_1000, type = "l")
-
-
 
 cp_res_coverage_1000 = rep(0,99)
 cp_res_len_1000 = rep(0,99)
@@ -296,9 +281,6 @@ for (i in 1:99) {
   cp_res_len_1000[i] <-  mean(temp_len)
   cp_res_coverage_1000[i] <-  mean(temp_coverage)
 }
-
-plot(p_s, cp_res_len_1000)
-plot(p_s, cp_res_coverage_1000, type = "l")
 
 ac_res_coverage_1000 = rep(0,99)
 ac_res_len_1000 = rep(0,99)

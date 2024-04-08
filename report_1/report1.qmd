@@ -12,6 +12,7 @@ editor: visual
 library(tidyverse)
 library(here)
 library(ggmosaic)
+library(binom)
 ```
 
 # 1. Wstęp
@@ -416,7 +417,7 @@ cat("Próbka wylosowana ze zwracaniem",which_row_false)
 
 ## 3.3. Zadanie 3.
 
-**Zaproponuj metode symulowania zmiennych losowych z rozkładu dwumianowego. Napisz funkcje do generowania realizacji, a nastepnie zaprezentuj jej działanie porównujac wybrane teoretyczne i empiryczne charakterystyki dla przykładowych wartosci paramertów rozkładu: n i p.**
+**Zaproponuj metodę symulowania zmiennych losowych z rozkładu dwumianowego. Napisz funkcje do generowania realizacji, a nastepnie zaprezentuj jej działanie porównujac wybrane teoretyczne i empiryczne charakterystyki dla przykładowych wartosci paramertów rozkładu: n i p.**
 
 Będziemy generować zmienne losowe z rozkładu dwumianowego metodą odwrotnej dystrybuanty.
 
@@ -548,9 +549,67 @@ knitr::kable(compare_p)
 
 Zauważmy że wartości empiryczne parametru p są dostatecznie bliskie wartościom teoretycznym co potwierdza naszą tezę o poprawności generatora zmiennych losowych.
 
+## 3.4 Zadanie 4
+
+**Zaproponuj metodę symulowania wektorów losowych z rozkładu wielomianowego. Napisz funkcję do generowania realizacji, a następnie zaprezentuj jej działanie porównując wybrane teoretyczne i empiryczne charakterystyki dla przykładowych wartości paramertów rozkładu: n i p**
+
+Metoda wykorzystana do implementacji znajduje się w publikacji \[tu wrzucić trzeba href\] i opiera się na metodyce metod odwrotnej dystrybuanty.
+
+```{r}
+#| warning: false
+simulateMultinomial <- function(n, probs, size) {
+  res <- matrix(0, nrow = size, ncol = length(probs))
+  for (k in 1:size) {
+    probs <- probs / sum(probs)
+    
+    cumulativeProbs <- cumsum(probs)
+    
+    counts <- rep(0, length(probs))
+    
+    for (i in 1:n) {
+      rand <- runif(1)
+      
+      for (j in 1:length(cumulativeProbs)) {
+        if (rand <= cumulativeProbs[j]) {
+          counts[j] <- counts[j] + 1
+          break
+        }
+      }
+    }
+    res[k,] <- counts
+  }
+  res
+}
+```
+
+W każdej iteracji zwracany jest indeks odpowiadający za moment, w którym skumulowane prawdopodobieństwo nie przekracza wartości zmiennej losowej z rozkładu $\mathcal{U}(0,1)$.
+
+Do sprawdzenia poprawności estymatora wykorzystamy trzy przykładowe wektory prawdopodobieńśtw:${(0.1, 0.3, 0.4, 0.2), (0.5, 0.3, 0.2), (0.1, 0.1, 0.3, 0.2, 0.3)}$. Wykorzystamy również realizację 100 wartości wektorów losowych o zadanych wektorach prawdopodobieństw.
+
+```{r}
+n = 100
+probs_1 <- c(0.1, 0.3, 0.4, 0.2) 
+probs_2 <- c(0.5, 0.3, 0.2)
+probs_3 <- c(0.1, 0.1, 0.3, 0.2, 0.3)
+
+sample_1 <- simulateMultinomial(n, probs_1, 1000)
+sample_2 <- simulateMultinomial(n, probs_1, 1000)
+sample_3 <- simulateMultinomial(n, probs_1, 1000)
+
+estimated_probs_1 = colMeans(sample_1/n)
+estimated_probs_2 = colMeans(sample_2/n)
+estimated_probs_3 = colMeans(sample_3/n)
+
+sprintf("Estymowany wektor (0.1, 0.3, 0.4, 0.2): (%s).", toString(estimated_probs_1))
+sprintf("Estymowany wektor (0.5, 0.3, 0.2): (%s).", toString(estimated_probs_1))
+sprintf("Estymowany wektor (0.1, 0.1, 0.3, 0.2, 0.3): (%s).", toString(estimated_probs_1))
+```
+
+Zauważmy, że przy stosunkowo małej wielkości próbki można już zauważyć wyniki potwierdzające zdecydowanie poprawność zaimplementowanej metody.
+
 # 4. Wykonanie zadań z części III
 
-## 4.1. Zadanie 1
+## 4.1. Zadanie 6
 
 **Napisz funkcje do wyznaczania realizacji przedziału ufnosci Cloppera-Pearsona. Niech argumentem wejsciowym będzie poziom ufności, liczba sukcesów i liczba prób lub poziom ufnosci i wektor danych (funkcja powinna obsługiwać oba przypadki).**
 
@@ -570,7 +629,7 @@ clopper_pearson_confidence_interval <- function(confidence_level, successes=NULL
 }
 ```
 
-## 4.2. Zadanie 2
+## 4.2. Zadanie 7
 
 **Korzystając z funkcji napisanej w zadaniu 6. wyznacz realizacje przedziałów ufności dla prawdopodobieństwa, że pracownik jest zadowolony z wynagrodzenia w pierwszym badanym okresie oraz w drugim badanym okresie. Skorzystaj ze zmiennych CZY_ZADW oraz CZY_ZADW_2 (utwórz zmienną analogicznie jak w zadaniu 1.7). Przyjmij 1−α = 0.95.**
 
@@ -601,3 +660,456 @@ Jest `{r} sukcesy` pracowników spośród `{r} nrow(data)` , którzy byli zadowo
 #| warning: false
 clopper_pearson_confidence_interval(confidence_level = 0.95, successes = sukcesy, trials = nrow(data))
 ```
+
+## 4.3 Zadanie 9
+
+**Przeprowadź symulacje, których celem jest porównanie prawdopodobińestwa pokrycia i długości przedziałów ufności Cloppera-Pearsona, Walda i trzeciego dowolnego typu zaimplementowanego w funkcji binom.confint. Rozważ 1 − α = 0.95, rozmiar próby n ∈ {30, 100, 1000} i różne wartości prawdopodobieństwa p. Wyniki umieść na wykresach i sformułuj wnioski, które dla konkretnych danych ułatwia wybór konkretenego typu przedziału ufności.**
+
+W porównaniu brały udział trzy konstrukcje przedziałów- Walda, Cloppera-Pearsona oraz Agrestiego-Coulla. Porównanie przeprowadziliśmy według poniższej procedury Monte Carlo
+
+### ***Metoda Monte Carlo***
+
+1.  Generujemy realizację przedziału $\mathcal{B}(n,p)$
+2.  Dla wygenerowanej realizacji wyznaczamy wszystkie przedziały ufności
+3.  Obliczamy średnią długość przedziału wraz z prawdopodobieństwem pokrycia przedziału
+4.  Symulacje wykonujemy dla $p \in\{0.01, ..., 0.99\}$, $n \in\{30,100,1000\}$ $MCS = 1000$ razy.
+
+Wyniki przedstawiliśmy na wykresach dla poszczególnych $n$ .
+
+### $n$ = 30
+
+```{r}
+p_s = seq(from=0.01, to= 0.99, length.out = 99)
+
+wald_res_coverage_30 = rep(0,99)
+wald_res_len_30 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 30, prob = p_s[i])
+
+    ci_wald = Wald_CI(sample_binom, n = 30, 100, alpha = 0.05)
+    temp_len[mcs] <- ci_wald[2] - ci_wald[1]
+    temp_coverage[mcs] <-sum(ci_wald[1] < sample_binom/30& sample_binom/30<ci_wald[2])/100
+  }
+  wald_res_len_30[i] <-  mean(temp_len)
+  wald_res_coverage_30[i] <-  mean(temp_coverage)
+}
+
+cp_res_coverage_30 = rep(0,99)
+cp_res_len_30 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 30, prob = p_s[i])
+    ci_cp = binom.confint(sample_binom, n = 30,alpha = 0.05, methods = "exact")
+    temp_len[mcs] <- mean(ci_cp$upper- ci_cp$lower)
+    temp_coverage[mcs] <-sum(mean(ci_cp$lower) < sample_binom/30& sample_binom/30<mean(ci_cp$upper))/100
+  }
+  cp_res_len_30[i] <-  mean(temp_len)
+  cp_res_coverage_30[i] <-  mean(temp_coverage)
+}
+
+
+ac_res_coverage_30 = rep(0,99)
+ac_res_len_30 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 30, prob = p_s[i])
+    ci_ac = binom.confint(sample_binom, n = 30,alpha = 0.05, methods = "agresti-coull")
+    temp_len[mcs] <- mean(ci_ac$upper- ci_ac$lower)
+    temp_coverage[mcs] <-sum(mean(ci_ac$lower) < sample_binom/30& sample_binom/30<mean(ci_ac$upper))/100
+  }
+  ac_res_len_30[i] <-  mean(temp_len)
+  ac_res_coverage_30[i] <-  mean(temp_coverage)
+}
+
+```
+
+```{r}
+plot(p_s,wald_res_len_30, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Średnia długość przedziału ufności, 
+        n = 30, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "średnia długość przedziału", 
+     lty = 1, lwd = 2)
+
+lines(p_s, cp_res_len_30, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_len_30, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+```
+
+```{r}
+plot(p_s,wald_res_coverage_30, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Prawdopodobieństwo pokrycia przedziału ufności, 
+        n = 30, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "prawdopodobieństwo pokrycia", 
+     lty = 1, lwd = 2,ylim = c(0.8,1))
+
+lines(p_s, cp_res_coverage_30, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_coverage_30, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+```
+
+Za pomocą analogicznego kodu wykonujemy procedury oraz wykresy dla pozostałych wartości $n$
+
+### $n = 100$
+
+```{r}
+#| echo: false
+wald_res_coverage_100 = rep(0,99)
+wald_res_len_100 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 100, prob = p_s[i])
+    ci_wald = Wald_CI(sample_binom, n = 100, 100, alpha = 0.05)
+    temp_len[mcs] <- ci_wald[2] - ci_wald[1]
+    temp_coverage[mcs] <-sum(ci_wald[1] < sample_binom/100& sample_binom/100<ci_wald[2])/100
+  }
+  wald_res_len_100[i] <-  mean(temp_len)
+  wald_res_coverage_100[i] <-  mean(temp_coverage)
+}
+
+
+
+
+
+cp_res_coverage_100 = rep(0,99)
+cp_res_len_100 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 100, prob = p_s[i])
+    ci_cp = binom.confint(sample_binom, n = 100,alpha = 0.05, methods = "exact")
+    temp_len[mcs] <- mean(ci_cp$upper- ci_cp$lower)
+    temp_coverage[mcs] <-sum(mean(ci_cp$lower) < sample_binom/100& sample_binom/100<mean(ci_cp$upper))/100
+  }
+  cp_res_len_100[i] <-  mean(temp_len)
+  cp_res_coverage_100[i] <-  mean(temp_coverage)
+}
+
+
+ac_res_coverage_100 = rep(0,99)
+ac_res_len_100 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 100, prob = p_s[i])
+    ci_ac = binom.confint(sample_binom, n = 100,alpha = 0.05, methods = "agresti-coull")
+    temp_len[mcs] <- mean(ci_ac$upper- ci_ac$lower)
+    temp_coverage[mcs] <-sum(mean(ci_ac$lower) < sample_binom/100& sample_binom/100<mean(ci_ac$upper))/100
+  }
+  ac_res_len_100[i] <-  mean(temp_len)
+  ac_res_coverage_100[i] <-  mean(temp_coverage)
+}
+```
+
+```{r}
+#| echo: false
+plot(p_s,wald_res_len_100, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Średnia długość przedziału ufności, 
+        n = 100, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "średnia długość przedziału", 
+     lty = 1, lwd = 2)
+
+lines(p_s, cp_res_len_100, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_len_100, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+
+```
+
+```{r}
+#| echo: false
+plot(p_s,wald_res_coverage_100, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Prawdopodobieństwo pokrycia przedziału ufności, 
+        n = 100, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "prawdopodobieństwo pokrycia", 
+     lty = 1, lwd = 2,ylim = c(0.8,1))
+
+lines(p_s, cp_res_coverage_100, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_coverage_100, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+```
+
+### $n=1000$
+
+```{r}
+#| echo: false
+wald_res_coverage_1000 = rep(0,99)
+wald_res_len_1000 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 1000, prob = p_s[i])
+    ci_wald = Wald_CI(sample_binom, n = 1000, 100, alpha = 0.05)
+    temp_len[mcs] <- ci_wald[2] - ci_wald[1]
+    temp_coverage[mcs] <-sum(ci_wald[1] < sample_binom/1000& sample_binom/1000<ci_wald[2])/100
+  }
+  wald_res_len_1000[i] <-  mean(temp_len)
+  wald_res_coverage_1000[i] <-  mean(temp_coverage)
+}
+
+
+cp_res_coverage_1000 = rep(0,99)
+cp_res_len_1000 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 1000, prob = p_s[i])
+    ci_cp = binom.confint(sample_binom, n = 1000,alpha = 0.05, methods = "exact")
+    temp_len[mcs] <- mean(ci_cp$upper- ci_cp$lower)
+    temp_coverage[mcs] <-sum(mean(ci_cp$lower) < sample_binom/1000& sample_binom/1000<mean(ci_cp$upper))/100
+  }
+  cp_res_len_1000[i] <-  mean(temp_len)
+  cp_res_coverage_1000[i] <-  mean(temp_coverage)
+}
+
+ac_res_coverage_1000 = rep(0,99)
+ac_res_len_1000 = rep(0,99)
+for (i in 1:99) {
+  temp_len = rep(0,1000)
+  temp_coverage = rep(0,1000)
+  for (mcs in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 1000, prob = p_s[i])
+    ci_ac = binom.confint(sample_binom, n = 1000,alpha = 0.05, methods = "agresti-coull")
+    temp_len[mcs] <- mean(ci_ac$upper- ci_ac$lower)
+    temp_coverage[mcs] <-sum(mean(ci_ac$lower) < sample_binom/1000& sample_binom/1000<mean(ci_ac$upper))/100
+  }
+  ac_res_len_1000[i] <-  mean(temp_len)
+  ac_res_coverage_1000[i] <-  mean(temp_coverage)
+}
+```
+
+```{r}
+#| echo: false
+plot(p_s,wald_res_len_1000, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Średnia długość przedziału ufności, 
+        n = 1000, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "średnia długość przedziału", 
+     lty = 1, lwd = 2)
+
+lines(p_s, cp_res_len_1000, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_len_1000, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+
+```
+
+```{r}
+#| echo: false
+plot(p_s,wald_res_coverage_1000, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="Prawdopodobieństwo pokrycia przedziału ufności, 
+        n = 1000, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "prawdopodobieństwo pokrycia", 
+     lty = 1, lwd = 2,ylim = c(0.8,1))
+
+lines(p_s, cp_res_coverage_1000, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s, ac_res_coverage_1000, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+```
+
+Wnioski są następujące - dla $n =100$ oraz $n=1000$, za sprawą zbieżności przedziałów według rozkładów oraz prawa wielkich liczb które prowadzą do twierdzeń granicznych, nie ma większych różnic zarówno w przypadku średnich długości przedziałów jak i prawdopodobieńśtwa pokrycia. Warto wspomnieć, że dla $n = 30$ oraz dla bardzo dużego zakresu wartości $p$, Najwęższymi przedziałami są przedziały Agrestiego-Coulla. Odzwierciedla się to oczywiście w prawdopodobieństwie pokrycia, które naturalnie będzie niższe, ponieważ jest mniejsza szansa, aby proporcje "załapały się" do węższego przedziału. Ta tendencja, choć w mniejszym stopniu zauważalna, to ogólna koneksja pomiędzy prawdopodobieństwem pokrycia a średnią długością przedziałów ufności - dla dużych $n$ z racji tego, że przedziały są tak samo szerokie, szansa na to, by pokrywały badane przez nas wartości proporcji jest porównywalna.
+
+# 5. Wykonanie zadań z części V
+
+## **Zadanie 12.**
+
+#### Wyznacz symulacyjnie moc testu dokładnego oraz moc testu asymptotycznego w przypadku weryfikacji hipotezy zerowej H0 : p = 0.9 przeciwko H1 : p̸ = 0.9 przyjmując wartość 1 − α = 0.95. Uwzględnij róęne wartości alternatyw i różne rozmiary próby. Sformułuj wnioski.
+
+Do porównania wyznaczonych wartości funkcji mocy zastosowaliśmy poniższą symulacje Monte Carlo:
+
+1.  Generujemy realizację przedziału $\mathcal{B}(n,p)$
+2.  Dla wygenerowanej realizacji wykonujemy testy, które zwracają nam odpowiednie przedziały ufności, służące do określenia przedziałów odrzucenia naszej $H_0$.
+3.  Obliczamy moc testu, czyli $\frac{\text{#}\{\text{Ilość odrzuconych przypadków}\}}{MCS}$
+4.  Symulacje wykonujemy dla $p \in\{0.01, ..., 0.99\}$, $n \in\{30,100,1000\}$ $MCS = 1000$ razy.
+
+Wyniki symulacji przedstawiliśmy oczywiście na wykresach.
+
+## $n=30$
+
+```{r}
+p_s_tests <-  seq(from=0.01, to= 0.99, length.out = 98)
+pwr_binom_test_30 = rep(0,98)
+pwr_prop_test_corrected_30 = rep(0,98)
+pwr_prop_test_30 = rep(0,98)
+for (k in 1:98) {
+  temp_binom = 0 
+  temp_prop_corrected = 0
+  temp_prop = 0
+  for (i in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 30, prob = p_s_tests[k])
+    ci_binom = binom.test(sum(sample_binom),n = 100*30, p = .9)$conf.int
+    if (!(ci_binom[1] < 0.9 & 0.9 < ci_binom[2])) {
+      temp_binom = temp_binom + 1
+    }
+    
+    
+    ci_prop_corrected = prop.test(sum(sample_binom),n = 100*30, p = .9)$conf.int
+    if (!(ci_prop_corrected[1] < 0.9 & 0.9 < ci_prop_corrected[2])) {
+      temp_prop_corrected = temp_prop_corrected + 1
+    }
+    
+    
+    ci_prop = prop.test(sum(sample_binom),n = 100*30, p = .9, correct = FALSE)$conf.int
+    if (!(ci_prop[1] < 0.9 & 0.9 < ci_prop[2])) {
+      temp_prop = temp_prop + 1
+    }
+    
+  }
+  pwr_binom_test_30[k] <- temp_binom/1000
+  pwr_prop_test_corrected_30[k] <- temp_prop_corrected/1000
+  pwr_prop_test_30[k] <- temp_prop/1000
+}
+plot(p_s_tests,pwr_binom_test_30, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="         Porównanie mocy testów H0: p=0.9, 
+        n = 30, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "moc testu", 
+     lty = 1, lwd = 2)
+
+lines(p_s_tests, pwr_prop_test_corrected_30, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s_tests, pwr_prop_test_30, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("left", legend = c("binom.test(_)", "prop.test(_)", "prop.test(_, correct = FALSE"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+
+```
+
+Za pomocą analogicznego kodu ilustrujemy moc testu dla pozostałych wartości $n$
+
+## $n = 100$
+
+```{r}
+#| echo: false
+pwr_binom_test_100 = rep(0,98)
+pwr_prop_test_corrected_100 = rep(0,98)
+pwr_prop_test_100 = rep(0,98)
+for (k in 1:98) {
+  temp_binom = 0 
+  temp_prop_corrected = 0
+  temp_prop = 0
+  for (i in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 100, prob = p_s_tests[k])
+    ci_binom = binom.test(sum(sample_binom),n = 100*100, p = .9)$conf.int
+    if (!(ci_binom[1] < 0.9 & 0.9 < ci_binom[2])) {
+      temp_binom = temp_binom + 1
+    }
+    
+    
+    ci_prop_corrected = prop.test(sum(sample_binom),n = 100*100, p = .9)$conf.int
+    if (!(ci_prop_corrected[1] < 0.9 & 0.9 < ci_prop_corrected[2])) {
+      temp_prop_corrected = temp_prop_corrected + 1
+    }
+    
+    
+    ci_prop = prop.test(sum(sample_binom),n = 100*100, p = .9, correct = FALSE)$conf.int
+    if (!(ci_prop[1] < 0.9 & 0.9 < ci_prop[2])) {
+      temp_prop = temp_prop + 1
+    }
+    
+  }
+  pwr_binom_test_100[k] <- temp_binom/1000
+  pwr_prop_test_corrected_100[k] <- temp_prop_corrected/1000
+  pwr_prop_test_100[k] <- temp_prop/1000
+}
+plot(p_s_tests,pwr_binom_test_100, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="         Porównanie mocy testówm H0: p=0.9, 
+        n = 100, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "moc testu", 
+     lty = 1, lwd = 2)
+
+lines(p_s_tests, pwr_prop_test_corrected_100, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s_tests, pwr_prop_test_100, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("left", legend = c("binom.test(_)", "prop.test(_)", "prop.test(_, correct = FALSE"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+
+```
+
+## $n = 1000$
+
+```{r}
+#| echo: false
+
+pwr_binom_test_1000 = rep(0,98)
+pwr_prop_test_corrected_1000 = rep(0,98)
+pwr_prop_test_1000 = rep(0,98)
+for (k in 1:98) {
+  temp_binom = 0 
+  temp_prop_corrected = 0
+  temp_prop = 0
+  for (i in 1:1000) {
+    sample_binom = rbinom(n = 100, size = 1000, prob = p_s_tests[k])
+    ci_binom = binom.test(sum(sample_binom),n = 100*1000, p = .9)$conf.int
+    if (!(ci_binom[1] < 0.9 & 0.9 < ci_binom[2])) {
+      temp_binom = temp_binom + 1
+    }
+    
+    
+    ci_prop_corrected = prop.test(sum(sample_binom),n = 100*1000, p = .9)$conf.int
+    if (!(ci_prop_corrected[1] < 0.9 & 0.9 < ci_prop_corrected[2])) {
+      temp_prop_corrected = temp_prop_corrected + 1
+    }
+    
+    
+    ci_prop = prop.test(sum(sample_binom),n = 100*1000, p = .9, correct = FALSE)$conf.int
+    if (!(ci_prop[1] < 0.9 & 0.9 < ci_prop[2])) {
+      temp_prop = temp_prop + 1
+    }
+    
+  }
+  pwr_binom_test_1000[k] <- temp_binom/1000
+  pwr_prop_test_corrected_1000[k] <- temp_prop_corrected/1000
+  pwr_prop_test_1000[k] <- temp_prop/1000
+}
+plot(p_s_tests,pwr_binom_test_1000, type = "l", frame = FALSE, pch = 19,
+     col = "red",main="         Porównanie mocy testówm H0: p=0.9, 
+        n = 1000, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "moc testu", 
+     lty = 1, lwd = 2)
+
+lines(p_s_tests, pwr_prop_test_corrected_1000, pch = 23, col = "blue", type = "l", 
+      lty = 2, lwd = 2)
+
+lines(p_s_tests, pwr_prop_test_1000, pch = 18, col = "green", type = "b", 
+      lty = 3, lwd = 2)
+
+legend("left", legend = c("binom.test(_)", "prop.test(_)", "prop.test(_, correct = FALSE"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+```
+
+Podsumowując porównanie, wszystkie testy są zgodne, nie da się wybrać testu jednostajnie najmocniejszego. Dodatkowo, możemy zauważyć węższy "peak" w wykresach mocy testu przy zwiększaniu ilości prób Bernoulliego, czyli parametru $n$ rozkładu.
