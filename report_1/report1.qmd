@@ -13,6 +13,7 @@ library(tidyverse)
 library(here)
 library(ggmosaic)
 library(binom)
+library(stats)
 ```
 
 # 1. Wstęp
@@ -39,7 +40,7 @@ Analizowany zbiór danych został zadany przez prowadzącego wykład "Analiza Da
 
 # 2. Wykonanie zadań z części I
 
-## 2.1. Zadanie 1
+## 2.1. Zadanie 1.1
 
 **Wczytaj dane i przygotuj je do analizy. Zadbaj o odpowiednie typy zmiennych, zweryfikuj czy przyjmują wartości zgodne z powyższym opisem, zbadaj czy nie występują braki w danych.**
 
@@ -77,13 +78,13 @@ Widzimy, że zmienne przyjmują wartości zgodne z opisem. Zobaczmy na ilość b
 data %>% sapply(function(x) sum(is.na(x)))
 ```
 
-Nie mamy żadnych braków w danych. Pozostaje nam sprawdzić jeszcze typy danych
+Nie mamy żadnych braków w danych. Pozostaje nam sprawdzić jeszcze typy danych.
 
 ```{r}
 str(data)
 ```
 
-Zauważmy, że zmienne DZIAŁ, STAŻ, CZY_KIER, PYT_1, PYT_2, PYT_3, PLEC zgodnie z opisem danych są zmiennymi kategorycznymi, zatem więc typ zmiennych w zbiorze danych jest błędny, co należy zmienić.
+Zauważmy, że zmienne DZIAŁ, STAŻ, CZY_KIER, PYT_1, PYT_2, PYT_3, PLEC zgodnie z opisem danych są zmiennymi kategorycznymi, typ zmiennych w zbiorze danych jest błędny i wymaga korekty.
 
 ```{r}
 #| warning: false
@@ -91,7 +92,7 @@ data <- data %>%
   mutate_at(vars(DZIAL, STAZ, CZY_KIER, PYT_1, PYT_2, PYT_3, PLEC), as.factor)
 ```
 
-## 2.2. Zadanie 2
+## 2.2. Zadanie 1.2
 
 **Utwórz zmienną *WIEK_KAT* przeprowadzając kategoryzacje zmiennej WIEK korzysatając z następujących przedziałów: do 35 lat, między 36 a 45 lat, między 46 a 55 lat, powyżej 55 lat.**
 
@@ -102,7 +103,7 @@ nazwy_kategori <- c("0-35", "36-45", "46-55", "55+")
 data$WIEK_KAT <- cut(data$WIEK, przedzialy_wiekowe, labels = nazwy_kategori, include.lowest = TRUE)
 ```
 
-## 2.3. Zadanie 3
+## 2.3. Zadanie 1.3
 
 **Sporządź tablice liczności dla zmiennych: *DZIAŁ*, *STAZ*, *CZY_KIER*, *PŁEC*, *WIEK_KAT***.
 
@@ -115,15 +116,29 @@ amount_plec <- data %>% group_by(PLEC) %>% summarise(ile = n())
 amount_wiek_kat <- data %>% group_by(WIEK_KAT) %>% summarise(ile = n())
 ```
 
-Przykładowo wyświetlimy jedną z nich - tablice liczności zmiennej DZIAL.
+Wykonane tablice liczności zamieszczono poniżej.
 
 ```{r}
 #| warning: false
 #| echo: false
-knitr::kable(amount_dzial)
+# knitr::kable(amount_dzial)
+knitr::kable(amount_dzial, 
+             caption = 'Tablica liczności zmiennej DZIAŁ')
+
+knitr::kable(amount_staz, 
+             caption = 'Tablica liczności zmiennej STAŻ')
+
+knitr::kable(amount_czy_kier, 
+             caption = 'Tablica liczności zmiennej CZY_KIER')
+
+knitr::kable(amount_plec, 
+             caption = 'Tablica liczności zmiennej PŁEĆ')
+
+knitr::kable(amount_wiek_kat, 
+             caption = 'Tablica liczności zmiennej WIEK_KAT')
 ```
 
-## 2.4. Zadanie 4
+## 2.4. Zadanie 1.4
 
 **Sporządź wykresy kołowe oraz wykresy słupkowe dla zmiennych: *PYT_1* oraz *PYT_2***.
 
@@ -199,23 +214,42 @@ data %>%
 
 ```
 
-## 2.5. Zadanie 5
+## 2.5. Zadanie 1.5
 
 **Sporządź tablice wielodzielcze dla par zmiennych: *PYT_1* i *DZIAL*, *PYT_1* i *STAŻ*, *PYT_1* i *CZY_KIER*, *PYT_1* i *PŁEC* oraz *PYT_1* i *WIEK_KAT***.
 
-Wywołamy przykładowo jedną z tablic- dla zmiennych ***PYT_1*** i ***DZIAL***.
+Wykonane tablice wielodzielcze dla zadanych par zmiennych znajdują się w poniższych tabelach.
 
 ```{r}
 #| warning: false
 crosstab_dzial_pyt1 <-table(data$DZIAL, data$PYT_1)
-knitr::kable(crosstab_dzial_pyt1)
 crosstab_staz_pyt1  <-table(data$STAZ, data$PYT_1)
-crosstab_staz_czy_kier_pyt1 <-table(data$CZY_KIER, data$PYT_1)
-crosstab_staz_płeć_pyt1 <-table(data$PLEC, data$PYT_1)
-crosstab_staz_wiek_kat_pyt1 <-table(data$WIEK_KAT, data$PYT_1)
+crosstab_czy_kier_pyt1 <-table(data$CZY_KIER, data$PYT_1)
+crosstab_plec_pyt1 <-table(data$PLEC, data$PYT_1)
+crosstab_wiek_kat_pyt1 <-table(data$WIEK_KAT, data$PYT_1)
 ```
 
-## 2.6. Zadanie 6
+```{r}
+#| warning: false
+#| echo: false
+# knitr::kable(crosstab_dzial_pyt1)
+knitr::kable(crosstab_dzial_pyt1, 
+             caption = 'Tablica wielodzielcza dla pary zmiennych PYT_1 i DZIAŁ')
+
+knitr::kable(crosstab_staz_pyt1, 
+             caption = 'Tablica wielodzielcza dla pary zmiennych PYT_1 i STAŻ')
+
+knitr::kable(crosstab_czy_kier_pyt1, 
+             caption = 'Tablica wielodzielcza dla pary zmiennych PYT_1 i CZY_KIER')
+
+knitr::kable(crosstab_plec_pyt1, 
+             caption = 'Tablica wielodzielcza dla pary zmiennych PYT_1 i CZY_KIER')
+
+knitr::kable(crosstab_wiek_kat_pyt1, 
+             caption = 'Tablica wielodzielcza dla pary zmiennych PYT_1 i WIEK_KAT')
+```
+
+## 2.6. Zadanie 1.6
 
 **Sporządź tablice wielodzielczą dla pary zmiennych: *PYT_2* i *PYT_3.***
 
@@ -223,13 +257,14 @@ To zadanie rozwiązujemy podobnie, jak zadanie 5. Uzyskujemy:
 
 ```{r}
 #| warning: false
-crosstab_staz_wiek_kat_pyt1 <-table(data$PYT_2, data$PYT_3)
-knitr::kable(crosstab_staz_wiek_kat_pyt1)
+crosstab_pyt2_pyt3 <-table(data$PYT_2, data$PYT_3)
+knitr::kable(crosstab_pyt2_pyt3, 
+             caption = 'Tablica wielodzielcza dla pary zmiennych PYT_2 i PYT_3')
 ```
 
-## 2.7. Zadanie 7
+## 2.7. Zadanie 1.7
 
-**Utwórz zmienną *CZY_ZADOW* na podstawie zmiennej *PYT_1*, łącząc kategorie "nie zgadzam się" i "zdecydowanie się nie zgadzam" oraz "zgadzam się" i "zdecydowanie się zgadzam".**
+**Utwórz zmienną *CZY_ZADOW* na podstawie zmiennej *PYT_2*, łącząc kategorie "nie zgadzam się" i "zdecydowanie się nie zgadzam" oraz "zgadzam się" i "zdecydowanie się zgadzam".**
 
 W naszym podejściu zmienna ***CZY_ZADOW*** przyjmuje następujące wartości:
 
@@ -247,9 +282,11 @@ data <- mutate(data, CZY_ZADOW = ifelse(as.numeric(as.character(PYT_2)) == -2, 0
 data$CZY_ZADOW <- as.factor(as.integer(data$CZY_ZADOW))
 ```
 
-## 2.8. Zadanie 8
+## 2.8. Zadanie 1.8
 
 Sporządź wykresy mozaikowe odpowiadające parom zmiennych: ***CZY_ZADOW*** i ***DZIAŁ***, ***CZY_ZADOW*** i ***STAZ***, ***CZY_ZADOW*** i ***CZY_KIER***, ***CZY_ZADOW*** i ***PLEC*** oraz ***CZY_ZADOW*** i ***WIEK_KAT***. Czy na podstawie uzyskanych wykresów można postawić pewne hipotezy dotyczące relacji między powyższymi zmiennymi? Spróbuj sformułować kilka takich hipotez.
+
+### 1. Wykres mozaikowy pary zmiennych CZY_ZADOW i DZIAŁ
 
 ```{r}
 #| warning: false
@@ -263,6 +300,8 @@ data %>% ggplot() +
 
 Zauważmy, że największy odsetek osób zadowolonych ze swojej sytuacji badanej w firmie przypada na dział IT. Nic w tym dziwnego - zarobki są atrakcyjne oraz sama praca z reguły jest dla osób, które w tej pracy lubią się spełniać - praca w dziale komunikacji jest łatwiej "dostępna" i osiągalna, co niesie za sobą ryzyko związane z tym, że ludzie tam pracujący nie robią tego z pasji.
 
+### 2. Wykres mozaikowy pary zmiennych CZY_ZADOW i STAZ
+
 ```{r}
 #| warning: false
 data %>% ggplot() +
@@ -274,6 +313,8 @@ data %>% ggplot() +
 ```
 
 Z kolei tutaj zauważamy największe zadowolenie wśród stażystów ze stażem w długości od roku do 3 lat. Jest to dosyć długi czas, jak na staż, jednakże może być to związane z poczuciem integralności w firmie, reputacja na swój temat oraz swojej pozycji w firmie rośnie. Stażyści powyżej 3 lat mają podzielone zdania- jest to już bardzo długi okres jeżeli chodzi o stanowiska stażowe, pracownicy z pewnością chcieliby zostać bardziej docenieni, bardziej poważani wśród innych pracowników.
+
+### 3. Wykres mozaikowy pary zmiennych CZY_ZADOW i CZY_KIER
 
 ```{r}
 #| warning: false
@@ -287,6 +328,8 @@ data %>% ggplot() +
 
 Zdecydowanie widzimy wieksze, dominujące zadowolenie wśród pracowników niebędących kierownikami. Stanowiska kierownicze rządzą się oczywiście swoimi prawami, więc nie powinno to budzić wątpliwości.
 
+### 4. Wykres mozaikowy pary zmiennych CZY_ZADOW i PLEC
+
 ```{r}
 #| warning: false
 data %>% ggplot() +
@@ -298,6 +341,8 @@ data %>% ggplot() +
 ```
 
 Jeżeli rozważymy zadowolenie w zależności od płci ankietowanych osób, to tutaj nie ma większych różnic. Zdecydowanie więcej ankietowanych to mężczyźni, jednakże odsetek osób zadowolonych wśród obu płci jest podobny. Można wnioskować o równym traktowaniu pracowników firmy.
+
+### 5. Wykres mozaikowy pary zmiennych CZY_ZADOW i WIEK_KAT
 
 ```{r}
 #| warning: false
@@ -315,9 +360,9 @@ Generalnie, ułożenie wykresów mozaikowych przeważnie sugeruje na pewne wzorc
 
 # 3. Wykonanie zadań z części II
 
-## 3.1. Zadanie 1
+## 3.1. Zadanie 2.
 
-Zapoznaj się z biblioteką likert i dostępnymi tam funkcjami summary oraz plot (wykresy typu "bar", "heat" oraz "density"), a następnie zilustruj odpowiedzi na pytanie "Jak bardzo zgadzasz się ze stwierdzeniem, że firma pozwala na (...)?" (zmienna **PYT_1**) w całej badanej grupie oraz w podgrupach ze względu na zmienna **CZY_KIER**.
+**Zapoznaj się z biblioteką likert i dostępnymi tam funkcjami summary oraz plot (wykresy typu "bar", "heat" oraz "density"), a następnie zilustruj odpowiedzi na pytanie "Jak bardzo zgadzasz się ze stwierdzeniem, że firma pozwala na (...)?" (zmienna PYT_1) w całej badanej grupie oraz w podgrupach ze względu na zmienna CZY_KIER.**
 
 Pakiet likert służy do analizy danych zgromadzonych przy użyciu skali Likerta. Funkcja summaryw tej bibliotece daje krótkie podsumowanie zbioru danych. Zawiera nazwę danych których dotyczy analiza ("Item"), a także kolumnę "low" odpowiadającą za sumę odpowiedzi poniżej wartości neutralnej, kolumnę "high" odpowiadająca za sumę odpowiedzi poniżej wartości powyżej wartości neutralnej, oraz kolumny "średnia" i "sd" odpowiadające odpowiednio średniej i odchyleniu standardowemu. Poniżej znajduje się krótkie podsumowanie zmiennej PYT_1 wykonane funkcją summary.
 
@@ -344,9 +389,10 @@ plot(likert_df, type = 'bar', legend.position = 'right') +
                                "zdecydowanie się zgadzam"))
 ```
 
-Na poniższym rysunku mamy wykres typu heat. Możemy poznać procentowy rozkład odpowiedzi na pytanie " Jak bardzo zgadzasz się ze stwierdzeniem, że firma pozwala na elastyczne godziny pracy, tym samym umożliwiając zachowanie równowagi między pracą a życiem prywatnym?". Możemy zauważyć tak na poprzednim wykresie, że pracownicy są zgodni z tym twierdzeniem. Dodatkowo mamy pokazaną średnią odpowiedzi, która wynosi 3,56.
+Na poniższym rysunku mamy wykres typu heat. Możemy poznać procentowy rozkład odpowiedzi na pytanie " Jak bardzo zgadzasz się ze stwierdzeniem, że firma pozwala na elastyczne godziny pracy, tym samym umożliwiając zachowanie równowagi między pracą a życiem prywatnym?". Możemy zauważyć tak jak na poprzednim wykresie, że pracownicy są zgodni z tym twierdzeniem. Dodatkowo mamy pokazaną średnią odpowiedzi, która wynosi 3,56.
 
 ```{r}
+#| warning: false
 plot(likert_df, type = 'heat', low.color = "#F3FFFB", high.color = "#66c2a5") + 
   ggtitle('Wykres typu heat dla zmiennej PYT_1 (cała badana grupa)',
           subtitle = '"Jak bardzo zgadzasz się ze stwierdzeniem,  że firma pozwala na elastyczne godziny pracy \n tym samym umożliwiając zachowanie równowagi między pracą a życiem prywatnym?"') +
@@ -363,6 +409,7 @@ plot(likert_df, type = 'heat', low.color = "#F3FFFB", high.color = "#66c2a5") +
 Poniższy wykres przedstawia rozkład zmiennej PYT_1. Podobnie jak w poprzednich wizualizacjach może wywnioskować, że jest więcej osób, które się zgadzają z stwierdzeniem.
 
 ```{r}
+#| warning: false
 plot(likert_df, type = 'density', facet=TRUE) +
   scale_x_continuous(breaks=c(1,2,3, 4, 5),
                      labels=c("zdecydowanie się \n nie zgadzam", 
@@ -378,6 +425,7 @@ plot(likert_df, type = 'density', facet=TRUE) +
 W następnym kroku wykonaliśmy wykres typu "bar" dla analizowanej zmiennej PYT_1 z podziałem na podgrupy ze względu na zmienną CZY_KIER. Na poniższym diagramie mamy podział na osoby które są menadżerem ('TAK') oraz nie piastują tego stanowiska ('NIE'). Możemy zauważyć, że więcej pracowników firmy, którzy nie mają stanowiska menadżerskiego niż tych które je mają jest zadowolona z elastycznych godzin pracy. Może być to związane z tym, że menadżer posiada z pewnością obowiązków i granica pomiędzy życiem prywatnym a zawodowym może się zacierać.
 
 ```{r}
+#| warning: false
 subgroup_likert <- likert(data[,"PYT_1", drop=FALSE], grouping = data$CZY_KIER)
 
 plot(subgroup_likert, type = "bar") +
@@ -395,7 +443,7 @@ plot(subgroup_likert, type = "bar") +
   theme(legend.position = 'right')
 ```
 
-## 3.2. Zadanie 2.
+## 3.2. Zadanie 3.
 
 **Zapoznaj sie z funkcją sample z biblioteki stats, a następnie wylosuj próbkę o liczności 10% wszystkich rekordów z pliku "ankieta.csv" w dwóch wersjach: ze zwracaniem oraz bez zwracania.**
 
@@ -412,20 +460,52 @@ cat("Próbka wylosowana bez zwracania",which_row_false)
 
 # losowanie ze zwracaniem 
 which_row_true <- sample(c(1:nrow(data)), size = n, replace = TRUE)
-cat("Próbka wylosowana ze zwracaniem",which_row_false)
+cat("Próbka wylosowana ze zwracaniem",which_row_true)
 ```
 
-## 3.3. Zadanie 3.
+W przypadku wyznaczonych danych przez indeksy wylosowane ze zwracaniem i bez zwracania wygląda to następująco.
+
+```{r}
+#| warning: false
+#| echo: false
+
+knitr::kable(data[which_row_false,], 
+             caption = "Wylosowane rekordy bez zwracania")
+
+knitr::kable(data[which_row_true,], 
+             caption = "Wylosowane rekordy ze zwracaniem")
+```
+
+## 3.3. Zadanie 4.
 
 **Zaproponuj metodę symulowania zmiennych losowych z rozkładu dwumianowego. Napisz funkcje do generowania realizacji, a nastepnie zaprezentuj jej działanie porównujac wybrane teoretyczne i empiryczne charakterystyki dla przykładowych wartosci paramertów rozkładu: n i p.**
 
-Będziemy generować zmienne losowe z rozkładu dwumianowego metodą odwrotnej dystrybuanty.
+Będziemy generować zmienne losowe z rozkładu dwumianowego, który jest postaci:
+
+$$
+P\{X=i\} =  {n \choose i}p^i(1-p)^{n-i} 
+$$
+
+wykorzystując metodę odwrotnej dystrybuanty. Dodatkowo będziemy kożystać z tożsamości rekurencyjnej tego rozkładu, która została sformułowana w odpowiedni sposób:
+
+$$
+P\{X=i+1\} =\frac{n-i}{i+1}\cdot \frac{p}{1-p} \cdot P\{X=i\}
+$$
+
+Algorytm generowania zmiennej losowej z rozkładu dwumianowego jest następujący. \[1\]
+
+1.  Generujemy $U\sim U(0,1)$
+2.  Ustawiamy $p_0 = (1-p)^n, F = p_0, c= \frac{p}{1-p}$
+3.  Jeśli $U\leq F$ to zwróć $X = i$, w przeciwnym razie $p_0 = c\cdot (\frac{n-i}{i+1})\cdot p_0$, $F = F + p_0$
+4.  Wróć do 3.
+
+Poniższa implentacja korzysta powyższego algorytmu, aby wygenerować wektor zmiennych losowych.
 
 ```{r}
 #| warning: false
 set.seed(123)
 
-generate_binom <- function(n, p, N){
+generate_binom <- function(n, p, N=1000){
   U <- runif(N)
   p0 <- (1 - p)^n 
   Cprob <- p0
@@ -455,7 +535,7 @@ Sprawdzimy działanie oraz poprawność generatora zmiennych losowych porównuj�
 ```{r}
 #| warning: false
 # funkcja do porównywania dystrybuant
-comparison_cdfs_binom <- function(n=20, p, size=1){
+comparison_cdfs_binom <- function(n=20, p, size=1000){
   
   sample <- generate_binom(n, p, size)
   empirical_cdf <- ecdf(sample)
@@ -468,7 +548,7 @@ comparison_cdfs_binom <- function(n=20, p, size=1){
          col = c("blue", "red"), lty = 1:2, lwd = 2) }
 
 # funkcja do porównywania gęstości  
-comparison_pdfs_binom <- function(n, p, size=1){
+comparison_pdfs_binom <- function(n, p, size=1000){
   sample <- generate_binom(n, p, size)
   x_values <- 0:n
   theoretical_prob <- dbinom(x_values, n, p)
@@ -486,7 +566,7 @@ comparison_pdfs_binom <- function(n, p, size=1){
          pch = 16)}
 
 # funkcja do porównywania średniej
-comparison_mean_binom <- function(n=20, p, size=1){
+comparison_mean_binom <- function(n=20, p, size=1000){
   sample <- generate_binom(n, p, size)
  
   mean_empirical <- mean(sample)
@@ -497,7 +577,7 @@ comparison_mean_binom <- function(n=20, p, size=1){
 }
 
 # funkcja do porównywania wariancji
-comparison_var_binom <- function(n=20, p, size=1){
+comparison_var_binom <- function(n=20, p, size=1000){
   sample <- generate_binom(n, p, size)
   
   var_empirical <- var(sample)
@@ -510,7 +590,7 @@ comparison_var_binom <- function(n=20, p, size=1){
 
 ```
 
-Dla przykładu weźmiemy sobie rozkład o wartościach parametrów rozkładu n = 20 i p = 0.1.
+Dla przykładu weźmiemy sobie rozkład o wartościach parametrów rozkładu $n = 20$ i $p = 0.1$.
 
 ```{r}
 #| warning: false
@@ -521,7 +601,7 @@ comparison_var_binom(20, 0.1, size=1000)
 
 ```
 
-Zauważmy, że najważniejsze charakterystyki empiryczne i teoretyczne rozkładu są zbliżone do siebie, co wskazuje na poprawność generatora zmiennych losowych. Dodatkowo sprawdzimy naszą tezę, porównując poszczególne empiryczne prawdopodobieństwa z teoretycznymi zadanymi wartościami. Porównamy rozkładach o parametrach p 0.1, 0.5, 0.9.
+Zauważmy, że najważniejsze charakterystyki empiryczne i teoretyczne rozkładu są zbliżone do siebie, co wskazuje na poprawność generatora zmiennych losowych. Dodatkowo sprawdzimy naszą tezę, porównując poszczególne empiryczne prawdopodobieństwa z teoretycznymi zadanymi wartościami. Porównamy rozkłady o parametrach $p=\{0.1, 0.5, 0.9\}$.
 
 ```{r}
 #| warning: false
@@ -549,7 +629,7 @@ knitr::kable(compare_p)
 
 Zauważmy że wartości empiryczne parametru p są dostatecznie bliskie wartościom teoretycznym co potwierdza naszą tezę o poprawności generatora zmiennych losowych.
 
-## 3.4 Zadanie 4
+## 3.4 Zadanie 5.
 
 **Zaproponuj metodę symulowania wektorów losowych z rozkładu wielomianowego. Napisz funkcję do generowania realizacji, a następnie zaprezentuj jej działanie porównując wybrane teoretyczne i empiryczne charakterystyki dla przykładowych wartości paramertów rozkładu: n i p**
 
@@ -587,6 +667,7 @@ W każdej iteracji zwracany jest indeks odpowiadający za moment, w którym skum
 Do sprawdzenia poprawności estymatora wykorzystamy trzy przykładowe wektory prawdopodobieńśtw:${(0.1, 0.3, 0.4, 0.2), (0.5, 0.3, 0.2), (0.1, 0.1, 0.3, 0.2, 0.3)}$. Wykorzystamy również realizację 100 wartości wektorów losowych o zadanych wektorach prawdopodobieństw.
 
 ```{r}
+#| warning: false
 n = 100
 probs_1 <- c(0.1, 0.3, 0.4, 0.2) 
 probs_2 <- c(0.5, 0.3, 0.2)
@@ -607,9 +688,9 @@ sprintf("Estymowany wektor (0.1, 0.1, 0.3, 0.2, 0.3): (%s).", toString(estimated
 
 Zauważmy, że przy stosunkowo małej wielkości próbki można już zauważyć wyniki potwierdzające zdecydowanie poprawność zaimplementowanej metody.
 
-# 4. Wykonanie zadań z części III
+# 4. Wykonanie zadań z części III i IV
 
-## 4.1. Zadanie 6
+## 4.1. Zadanie 6.
 
 **Napisz funkcje do wyznaczania realizacji przedziału ufnosci Cloppera-Pearsona. Niech argumentem wejsciowym będzie poziom ufności, liczba sukcesów i liczba prób lub poziom ufnosci i wektor danych (funkcja powinna obsługiwać oba przypadki).**
 
@@ -629,7 +710,7 @@ clopper_pearson_confidence_interval <- function(confidence_level, successes=NULL
 }
 ```
 
-## 4.2. Zadanie 7
+## 4.2. Zadanie 7.
 
 **Korzystając z funkcji napisanej w zadaniu 6. wyznacz realizacje przedziałów ufności dla prawdopodobieństwa, że pracownik jest zadowolony z wynagrodzenia w pierwszym badanym okresie oraz w drugim badanym okresie. Skorzystaj ze zmiennych CZY_ZADW oraz CZY_ZADW_2 (utwórz zmienną analogicznie jak w zadaniu 1.7). Przyjmij 1−α = 0.95.**
 
@@ -645,23 +726,30 @@ data <- mutate(data, CZY_ZADOW_2 = ifelse(as.numeric(as.character(PYT_3)) == -2,
 data$CZY_ZADOW_2 <- as.factor(as.integer(data$CZY_ZADOW_2))
 ```
 
-Dalej przejdziemy do wyznaczenia liczby pracowników, którzy byli zadowoleni z wynagrodzenia w pierwszym badanym okresie oraz w drugim badanym okresie.
+Najpierw wyznaczyliśmy realizacje przedziału ufności dla prawdopodobieństwa że pracownik jest zadowolony z wynagrodzenia w pierwszym badanym okresie.
 
 ```{r}
 #| warning: false
-sukcesy <- count(subset(data, as.integer(as.factor(data$CZY_ZADOW)) == 1 & 
-                    as.integer(as.factor(data$CZY_ZADOW_2)) == 1)) %>% as.integer()
-# sukcesy = 74, trials = 200
+num_czy_zadow <- length(data$CZY_ZADOW[data$CZY_ZADOW == 1])
+cp_czy_zadow <- clopper_pearson_confidence_interval(confidence_level = 0.95,
+                                                    successes = num_czy_zadow,
+                                                    trials = nrow(data))
+cat('[', paste(cp_czy_zadow, collapse = ', '), ']')
 ```
 
-Jest `{r} sukcesy` pracowników spośród `{r} nrow(data)` , którzy byli zadowoleni z wynagrodzenia w pierwszym oraz w drugim badanym okresie. Zatem realizacja przedziału ufności Cloppera - Pearsona na poziomie ufności 0.95 ma się następująco :
+W kolejnym etapie wykonaliśmy tą samą czynność dla prawdopodobieństwa, że pracownik będzie zadowolony z wynagrodzenia w pierwszym drugim badanym okresie.
 
 ```{r}
 #| warning: false
-clopper_pearson_confidence_interval(confidence_level = 0.95, successes = sukcesy, trials = nrow(data))
+num_czy_zadow_2 <- data$CZY_ZADOW_2
+cp_czy_zadow_2 <- clopper_pearson_confidence_interval(confidence_level = 0.95,
+                                                      vector_data = num_czy_zadow_2)
+cat('[', paste(cp_czy_zadow_2, collapse = ', '), ']')
 ```
 
-## 4.3 Zadanie 9
+Rozważając związek między przedziałami ufności dla prawdopodobieństwa zadowolenia pracowników z wynagrodzenia w pierwszym oraz w drugim badanym okresie, możemy zauważyć, że przedział ufności dla tego prawdopodobieństwa w drugim okresie jest przesunięty w prawo. Innymi słowy, estymowana wartość prawdopodobieństwa zadowolenia w drugim okresie jest większa. W konsekwencji, można stwierdzić, że rewizja wynagrodzeń pozywnie wpłynęła na odsetek zadowolonych z osób z wysokości płac.
+
+## 4.3 Zadanie 9.
 
 **Przeprowadź symulacje, których celem jest porównanie prawdopodobińestwa pokrycia i długości przedziałów ufności Cloppera-Pearsona, Walda i trzeciego dowolnego typu zaimplementowanego w funkcji binom.confint. Rozważ 1 − α = 0.95, rozmiar próby n ∈ {30, 100, 1000} i różne wartości prawdopodobieństwa p. Wyniki umieść na wykresach i sformułuj wnioski, które dla konkretnych danych ułatwia wybór konkretenego typu przedziału ufności.**
 
@@ -857,6 +945,7 @@ legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
 ### $n=1000$
 
 ```{r}
+#| warning: false
 #| echo: false
 wald_res_coverage_1000 = rep(0,99)
 wald_res_len_1000 = rep(0,99)
@@ -906,6 +995,7 @@ for (i in 1:99) {
 ```
 
 ```{r}
+#| warning: false
 #| echo: false
 plot(p_s,wald_res_len_1000, type = "l", frame = FALSE, pch = 19,
      col = "red",main="Średnia długość przedziału ufności, 
@@ -924,6 +1014,7 @@ legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
 ```
 
 ```{r}
+#| warning: false
 #| echo: false
 plot(p_s,wald_res_coverage_1000, type = "l", frame = FALSE, pch = 19,
      col = "red",main="Prawdopodobieństwo pokrycia przedziału ufności, 
@@ -940,13 +1031,128 @@ legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
        col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
 ```
 
-Wnioski są następujące - dla $n =100$ oraz $n=1000$, za sprawą zbieżności przedziałów według rozkładów oraz prawa wielkich liczb które prowadzą do twierdzeń granicznych, nie ma większych różnic zarówno w przypadku średnich długości przedziałów jak i prawdopodobieńśtwa pokrycia. Warto wspomnieć, że dla $n = 30$ oraz dla bardzo dużego zakresu wartości $p$, Najwęższymi przedziałami są przedziały Agrestiego-Coulla. Odzwierciedla się to oczywiście w prawdopodobieństwie pokrycia, które naturalnie będzie niższe, ponieważ jest mniejsza szansa, aby proporcje "załapały się" do węższego przedziału. Ta tendencja, choć w mniejszym stopniu zauważalna, to ogólna koneksja pomiędzy prawdopodobieństwem pokrycia a średnią długością przedziałów ufności - dla dużych $n$ z racji tego, że przedziały są tak samo szerokie, szansa na to, by pokrywały badane przez nas wartości proporcji jest porównywalna.
+Wnioski są następujące - dla $n =100$ oraz $n=1000$, za sprawą zbieżności przedziałów według rozkładów oraz prawa wielkich liczb które prowadzą do twierdzeń granicznych, nie ma większych różnic zarówno w przypadku średnich długości przedziałów jak i prawdopodobieńśtwa pokrycia. Warto wspomnieć, że dla $n = 30$ oraz dla bardzo dużego zakresu wartości $p$, najwęższymi przedziałami są przedziały Agrestiego-Coulla. Odzwierciedla się to oczywiście w prawdopodobieństwie pokrycia, które naturalnie będzie niższe, ponieważ jest mniejsza szansa, aby proporcje "załapały się" do węższego przedziału. Ta tendencja, choć w mniejszym stopniu zauważalna, to ogólna koneksja pomiędzy prawdopodobieństwem pokrycia a średnią długością przedziałów ufności - dla dużych $n$ z racji tego, że przedziały są tak samo szerokie, szansa na to, by pokrywały badane przez nas wartości proporcji jest porównywalna.
 
 # 5. Wykonanie zadań z części V
 
-## **Zadanie 12.**
+## 5.1. Zadanie 11.
 
-#### Wyznacz symulacyjnie moc testu dokładnego oraz moc testu asymptotycznego w przypadku weryfikacji hipotezy zerowej H0 : p = 0.9 przeciwko H1 : p̸ = 0.9 przyjmując wartość 1 − α = 0.95. Uwzględnij róęne wartości alternatyw i różne rozmiary próby. Sformułuj wnioski.
+**Dla danych z pliku "ankieta.csv" korzystając z funkcji z zadania 8., przyjmując 1 − α = 0.95, zweryfikuj następujęce hipotezy i sformułuj wnioski:**
+
+### 1. Prawdopodobieństwo, że w firmie pracuje kobieta wynosi 0.5.
+
+Wykonamy binom test prawdopodobieństwa sukcesu. Hipoteza zerowa zakłada, że prawdobodobieństwo, że w firmie pracuje kobieta wynosi 0.5, natomiast hipoteza alternatywna jest zaprzeczeniem hipotezy zerowej. Przyjmujemy poziom ufności 0.95. Zweryfikowaliśmy przedziały ufności i p-wartość by ocenić prawdziwość hipotezy zerowej. Wyniki są widoczne poniżej.
+
+```{r}
+#| warning: false
+sum_woman_work <- length(data$PLEC[data$PLEC == "K"])
+test_1 <- binom.test(sum_woman_work, nrow(data), p = 0.5, 
+                     alternative = "two.sided")
+cat('P - wartość wynosi:', test_1$p.value, 
+    ', przedział ufności jest postaci: [', test_1$conf.int, ']')
+```
+
+Zauważmy że p-wartość jest dużo mniejsza od poziomu istotności alpha = 0.05, co jest przesłanką do odrzucenia hipotezy zerowej. Dodatkowo jeśli spojrzymy na przedział ufności dla prawdopodobieństwa sukcesu, widzimy że p = 0.5 nie jest w tym przedziale, co potwierdza teze o odrzuceniu hipotezy zerowej. Podsumowując, hipoteza że prawdobodobieństwo, że w firmie pracuje kobieta wynosi 0.5 jest nieprawdziwa.
+
+### 2. Prawdopodbieństwo, że pracownik jest zadowolony ze swojego wynagrodzenia w pierwszym badanym okresie jest większe bądź równe 0.7.
+
+Zweryfikowaliśmy hipotezę, że prawdobodobieństwo, że pracownik jest zadowolony ze swojego wynagrodzenia w pierwszym badanym okresie jest większe bądź równe 0.7, co było naszą hipotezą zerową. Podobnie jak w pierwszym teście przyjęto poziom ufności 0.95 i zweryfikowaliśmy prawdziwość hipotezy zerowej na podstawie przedziału ufności oraz p-wartości. Wyniki zostały wyświetlone poniżej.
+
+```{r}
+#| warning: false
+sum_zadow <- length(data$CZY_ZADOW[data$CZY_ZADOW == 1])
+test_2 <- binom.test(sum_zadow, nrow(data), p = 0.7, alternative = "less")
+cat('P - wartość wynosi:', test_2$p.value, 
+    ', przedział ufności jest postaci: [',
+    test_2$conf.int, ']')
+```
+
+Test dał nam p-wartość mniejszą od zakładanego poziomu istotności, co sugeruje by odrzucić hipotezę zerową. Co więcej możemy zauważyć, że p \> = 0.7 jest poza przedziałem ufności, co podkreśla słuszność odrzucenia hipotezy zerowej na rzecz alternatywnej.
+
+### 3. Prawdopodobieństwo, że kobieta pracuje na stanowisku menedżerskim jest równe prawdopodobieństwu, że meżczyzna pracuje na stanowisku menedżerskim.
+
+Przeprowadzimy testy proporcji z poprawką na ciągłość i bez aby określić prawdziwość hipotezy zerowej że prawdopodobienstwo, że kobieta pracuje na stanowisku menedżerskim jest równe prawdopodobieństwu, że mężczyzna pracuje na stanowisku menedzerskim. Hipoteza alternatywna mówi, że te prawdopodobieństwa nie są równe. Wykonamy testy na poziomie ufności 0.95. Zweryfikujemy hipoteze zerową dzięki p-wartości. Wyniki testu są umieszczone w poniższej tabeli.
+
+```{r}
+#| warning: false
+sum_menadzer_woman <- length(data$PLEC[data$PLEC == "K" & data$CZY_KIER == 'Tak'])
+sum_menadzer_man <- length(data$PLEC[data$PLEC == "M" & data$CZY_KIER == 'Tak'])
+
+test_3_con <- prop.test(c(sum_menadzer_woman, sum_menadzer_man), 
+                        c(length(data$PLEC[data$PLEC == "K"]), 
+                          length(data$PLEC[data$PLEC == "M"])), 
+                        alternative = "two.sided", correct = TRUE)
+
+test_3_ucon <- prop.test(c(sum_menadzer_woman, sum_menadzer_man), 
+                        c(length(data$PLEC[data$PLEC == "K"]), 
+                          length(data$PLEC[data$PLEC == "M"])), 
+                        alternative = "two.sided", correct = FALSE)
+
+test_3_df <- data.frame('Testy' = c('Test z poprawką na ciągłość', 
+                                    'Test bez poprawki na ciągłość'), 
+           'P-wartość' = c(test_3_con$p.value, test_3_ucon$p.value))
+
+knitrr::kable(test_3_df)
+```
+
+Zauważmy, że dla obu testów p-wartość jest większa niż poziom istotności $\alpha = 0.05$, zatem nie ma podstaw do odrzucenia hipotezy zerowej.
+
+### 4. Prawdopodobieństwo, że kobieta jest zadowolona ze swojego wynagrodzenia w pierwszym badanym okresie jest równe prawdopodobieństwu, że mężczyzna jest zadowolony ze swojego wynagrodzenia w pierwszym badanym okresie.
+
+Będziemy testować hipotezę zerową że prawdopodobieństwo, że kobieta jest zadowolona ze swojego wynagrodzenia w pierwszym badanym okresie jest równe prawdopodobieństwu, że mężczyzna jest zadowolony ze swojego wynagrodzenia w pierwszym badanym okresie przeciw hipotezie alteratywnej, że te prawdopodobieństwa nie są równe. Przyjmujemy poziom ufności 0.95. Będziemy brali głównie pod uwagę p-wartość. Wyniki zostały umieszczone w tabeli poniżej.
+
+```{r}
+#| warning: false
+sum_zadow_woman <- length(data$PLEC[data$PLEC == "K" & data$CZY_ZADOW == 1])
+sum_zadow_man <- length(data$PLEC[data$PLEC == "M" & data$CZY_ZADOW == 1])
+
+test_4_con <- prop.test(c(sum_zadow_woman, sum_zadow_man), 
+                        c(length(data$PLEC[data$PLEC == "K"]), 
+                          length(data$PLEC[data$PLEC == "M"])), 
+                        alternative = "two.sided", correct = TRUE)
+
+test_4_ucon <- prop.test(c(sum_zadow_woman, sum_zadow_man), 
+                         c(length(data$PLEC[data$PLEC == "K"]), 
+                           length(data$PLEC[data$PLEC == "M"])), 
+                         alternative = "two.sided", correct = FALSE)
+
+test_4_df <- data.frame('Testy' = c('Test z poprawką na ciągłość', 
+                                    'Test bez poprawki na ciągłość'), 
+                        'P-wartość' = c(test_4_con$p.value, test_4_ucon$p.value))
+
+knitrr:kable(test_4_df)
+```
+
+Zauważmy, że dla obu testów p-wartość jest większa niż poziom istotności $\alpha = 0.05$, zatem nie podstaw do odrzucenia hipotezy zerowej.
+
+### 5. Prawdopodobieństwo, że kobieta pracuje w dziale obsługi kadrowo-płacowej jest większe lub równe prawdopodobieństwu, że mężczyzna pracuje w dziale obsługi kadrowo- płacowej.
+
+Wykonaliśmy test proporcji aby zweryfikować hipotezę zerową że prawdopodobieństwo, że kobieta pracuje w dziale obsługi kadrowo-płacowej jest większe lub równe prawdopodobieństwu, że mężczyzna pracuje w dziale obsługi kadrowo- płacowej. Hipotezą alternatywną dla tej hipotezy zerowej jest prawdopodobieństwo, że kobieta pracuje w dziale obsługi kadrowo-płacowej jest mniejsze od prawdopodobieństwa, że mężczyzna pracuje w dziale obsługi kadrowo- płacowej. Test wykonaliśmy na poziomie ufności 0.95. Wyniki przedstawiliśmy w tabeli poniżej.
+
+```{r}
+#| warning: false
+sum_hr_woman <- length(data$PLEC[data$PLEC == "K" & data$DZIAL == 'HR'])
+sum_hr_man <- length(data$PLEC[data$PLEC == "M" & data$DZIAL == 'HR'])
+
+test_5_con <- prop.test(c(sum_hr_woman, sum_hr_man), 
+                        c(length(data$PLEC[data$PLEC == "K"]), length(data$PLEC[data$PLEC == "M"])), 
+                        alternative = "less", correct = TRUE)
+
+test_5_ucon <- prop.test(c(sum_hr_woman, sum_hr_man), 
+                         c(length(data$PLEC[data$PLEC == "K"]), length(data$PLEC[data$PLEC == "M"])), 
+                         alternative = "less", correct = FALSE)
+
+test_5_df <- data.frame('Testy' = c('Test z poprawką na ciągłość', 
+                                    'Test bez poprawki na ciągłość'), 
+                        'P-wartość' = c(test_5_con$p.value, test_5_ucon$p.value))
+knitrr::kable(test_5_df)
+```
+
+Zauważmy, że dla obu testów p-wartość jest mniejsza niż poziom istotności alpha = 0.05, zatem należy odrzucić hipotezę zerową.
+
+## **5.2. Zadanie 12.**
+
+#### Wyznacz symulacyjnie moc testu dokładnego oraz moc testu asymptotycznego w przypadku weryfikacji hipotezy zerowej $H_0: p = 0.9$ przeciwko $H_1: p \neq 0.9$ przyjmując wartość 1 − α = 0.95. Uwzględnij różne wartości alternatyw i różne rozmiary próby. Sformułuj wnioski.
 
 Do porównania wyznaczonych wartości funkcji mocy zastosowaliśmy poniższą symulacje Monte Carlo:
 
@@ -957,9 +1163,10 @@ Do porównania wyznaczonych wartości funkcji mocy zastosowaliśmy poniższą s
 
 Wyniki symulacji przedstawiliśmy oczywiście na wykresach.
 
-## $n=30$
+### $n=30$
 
 ```{r}
+#| warning: false
 p_s_tests <-  seq(from=0.01, to= 0.99, length.out = 98)
 pwr_binom_test_30 = rep(0,98)
 pwr_prop_test_corrected_30 = rep(0,98)
@@ -1010,9 +1217,10 @@ legend("left", legend = c("binom.test(_)", "prop.test(_)", "prop.test(_, correct
 
 Za pomocą analogicznego kodu ilustrujemy moc testu dla pozostałych wartości $n$
 
-## $n = 100$
+### $n = 100$
 
 ```{r}
+#| warning: false
 #| echo: false
 pwr_binom_test_100 = rep(0,98)
 pwr_prop_test_corrected_100 = rep(0,98)
@@ -1061,11 +1269,11 @@ legend("left", legend = c("binom.test(_)", "prop.test(_)", "prop.test(_, correct
 
 ```
 
-## $n = 1000$
+### $n=1000$
 
 ```{r}
+#| warning: false
 #| echo: false
-
 pwr_binom_test_1000 = rep(0,98)
 pwr_prop_test_corrected_1000 = rep(0,98)
 pwr_prop_test_1000 = rep(0,98)
@@ -1113,3 +1321,7 @@ legend("left", legend = c("binom.test(_)", "prop.test(_)", "prop.test(_, correct
 ```
 
 Podsumowując porównanie, wszystkie testy są zgodne, nie da się wybrać testu jednostajnie najmocniejszego. Dodatkowo, możemy zauważyć węższy "peak" w wykresach mocy testu przy zwiększaniu ilości prób Bernoulliego, czyli parametru $n$ rozkładu.
+
+# 6. Źródła i literatura
+
+\[1\] Sheldon M. Ross, *Simulation Fourth Edition,* Elsevier
