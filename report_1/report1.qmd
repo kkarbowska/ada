@@ -633,7 +633,7 @@ Zauważmy że wartości empiryczne parametru p są dostatecznie bliskie wartośc
 
 **Zaproponuj metodę symulowania wektorów losowych z rozkładu wielomianowego. Napisz funkcję do generowania realizacji, a następnie zaprezentuj jej działanie porównując wybrane teoretyczne i empiryczne charakterystyki dla przykładowych wartości paramertów rozkładu: n i p**
 
-Metoda wykorzystana do implementacji znajduje się w publikacji \[tu wrzucić trzeba href\] i opiera się na metodyce metod odwrotnej dystrybuanty.
+Metoda wykorzystana do implementacji znajduje się w publikacji \[2\] i opiera się na metodyce metod odwrotnej dystrybuanty.
 
 ```{r}
 #| warning: false
@@ -764,7 +764,7 @@ W porównaniu brały udział trzy konstrukcje przedziałów- Walda, Cloppera-Pea
 
 Wyniki przedstawiliśmy na wykresach dla poszczególnych $n$ .
 
-### $n$ = 30
+## $n$ =30
 
 ```{r}
 p_s = seq(from=0.01, to= 0.99, length.out = 99)
@@ -993,6 +993,28 @@ for (i in 1:99) {
   ac_res_coverage_1000[i] <-  mean(temp_coverage)
 }
 ```
+
+### ***Fakt***
+
+Zapoznając się z proponowanymi funkcjami do generowania realizacji przedziałów ufności, można zauważyć podejście do implementacji polegające na generowaniu przedziałów ufności z osobna dla każdej zmiennej z losowego i.i.d $(X_1, ..., X_k)$, $X_i \sim \mathcal{B}(n,p)$. Czas działania owych funkcji, który jest kluczowy przy korzystaniu z pakietu R, można zoptymalizować, opierając się na poniższym spostrzeżeniu:
+
+***Lemat***
+
+Niech $(X_1, ..., X_k)$ - ciąg zmiennych losowych i.i.d o rozkładzie $X_i\sim\mathcal{B}(n,p)$. Wtedy prawdziwe jest:
+
+$$
+\xi = \sum_{i=1}^{k}{X_i} \sim \mathcal{B}(kn, p)
+$$
+
+Interpretacja jest następująca - wykonujemy $k$-krotnie pewne doświadczenie, każde składające się z $n$ niezależnych od siebie prób Bernoulliego. wynik i-tego doświadczenia jest zmienną losową $X_i \sim \mathcal{B}(n,p)$. Skoro zatem wyniki poszczególnych doświadczeń są od siebie niezależne, to próby Bernoulliego pomiędzy poszczególnymi doświadczeniami są również niezależne. Można zatem interpretować tą sytuację jako jedno, "wielkie" doświadczenie opierające się na $kn$ próbach Bernoulliego z prawdopodobieństwem sukcesu w każdej z takich prób równym $p$.
+
+Punktowy estymator proporcji wyrażony w języku zmiennych $X_i$ to po prostu:
+
+$$
+\displaystyle {\hat{p} = \frac{\sum_{i=1}^{k}X_i}{nk}}.
+$$
+
+Zatem, opierając się na implementacjach proponowanych funkcji, moglibyśmy liczyć tylko jedną realizację przedziałów ufności dla całego wektora losowego.
 
 ```{r}
 #| warning: false
@@ -1324,4 +1346,6 @@ Podsumowując porównanie, wszystkie testy są zgodne, nie da się wybrać tes
 
 # 6. Źródła i literatura
 
-\[1\] Sheldon M. Ross, *Simulation Fourth Edition,* Elsevier
+\[1\] Sheldon M. Ross, *Simulation Fourth Edition,* Elsevier.
+
+\[2\] Fishman,George S., *Sampling from the Multinomial Distribution on a Computer*, 1978.
