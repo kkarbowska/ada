@@ -1063,7 +1063,7 @@ Wnioski są następujące - dla $n =100$ oraz $n=1000$, za sprawą zbieżności 
 
 ### 1. Prawdopodobieństwo, że w firmie pracuje kobieta wynosi 0.5.
 
-Wykonamy binom test prawdopodobieństwa sukcesu. Hipoteza zerowa zakłada, że prawdobodobieństwo, że w firmie pracuje kobieta wynosi 0.5, natomiast hipoteza alternatywna jest zaprzeczeniem hipotezy zerowej. Przyjmujemy poziom ufności 0.95. Zweryfikowaliśmy przedziały ufności i p-wartość by ocenić prawdziwość hipotezy zerowej. Wyniki są widoczne poniżej.
+Wykonamy test dwumianowy dla prawdopodobieństwa sukcesu. Hipoteza zerowa zakłada, że prawdobodobieństwo, że w firmie pracuje kobieta wynosi 0.5, natomiast hipoteza alternatywna jest zaprzeczeniem hipotezy zerowej. Przyjmujemy poziom ufności 0.95. Zweryfikowaliśmy przedziały ufności i p-wartość by ocenić prawdziwość hipotezy zerowej. Wyniki są widoczne poniżej.
 
 ```{r}
 #| warning: false
@@ -1074,7 +1074,7 @@ cat('P - wartość wynosi:', test_1$p.value,
     ', przedział ufności jest postaci: [', test_1$conf.int, ']')
 ```
 
-Zauważmy że p-wartość jest dużo mniejsza od poziomu istotności alpha = 0.05, co jest przesłanką do odrzucenia hipotezy zerowej. Dodatkowo jeśli spojrzymy na przedział ufności dla prawdopodobieństwa sukcesu, widzimy że p = 0.5 nie jest w tym przedziale, co potwierdza teze o odrzuceniu hipotezy zerowej. Podsumowując, hipoteza że prawdobodobieństwo, że w firmie pracuje kobieta wynosi 0.5 jest nieprawdziwa.
+Zauważmy że p-wartość jest dużo mniejsza od poziomu istotności alpha = 0.05, co jest przesłanką do odrzucenia hipotezy zerowej. Dodatkowo, jeśli spojrzymy na przedział ufności dla prawdopodobieństwa sukcesu, widzimy że p = 0.5 nie jest w tym przedziale, co potwierdza tezę o odrzuceniu hipotezy zerowej. Podsumowując, hipoteza że prawdobodobieństwo, że w firmie pracuje kobieta wynosi 0.5 jest nieprawdziwa.
 
 ### 2. Prawdopodbieństwo, że pracownik jest zadowolony ze swojego wynagrodzenia w pierwszym badanym okresie jest większe bądź równe 0.7.
 
