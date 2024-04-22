@@ -10,10 +10,12 @@ editor: visual
 #| echo: false
 #| warning: false
 library(tidyverse)
+library(likert)
 library(here)
 library(ggmosaic)
 library(binom)
 library(stats)
+library(binomCI)
 ```
 
 # 1. Wstęp
@@ -71,7 +73,7 @@ sort(unique(data$PYT_1))
 sort(unique(data$PYT_2))
 ```
 
-Widzimy, że zmienne przyjmują wartości zgodne z opisem. Zobaczmy na ilość braków danych w poszczególnych kolumnach.
+Widzimy, że zmienne przyjmują wartości zgodne z opisem. Zobaczmy teraz na ilość braków danych w poszczególnych kolumnach.
 
 ```{r}
 #| warning: false
@@ -81,6 +83,7 @@ data %>% sapply(function(x) sum(is.na(x)))
 Nie mamy żadnych braków w danych. Pozostaje nam sprawdzić jeszcze typy danych.
 
 ```{r}
+#| warning: false
 str(data)
 ```
 
@@ -160,9 +163,7 @@ data %>%
                               "nie zgadzam się", 
                               "nie mam zdania", 
                               "zgadzam się", 
-                              "zdecydowanie \n się zgadzam")) +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1))
-
+                              "zdecydowanie \n się zgadzam"))
 
 # zmienna PYT_2
 data %>% 
@@ -176,7 +177,6 @@ data %>%
                               "nie zgadzam się", 
                               "zgadzam się", 
                               "zdecydowanie \n się zgadzam"))
-  theme(axis.text.x = element_text(angle = 30, hjust = 1))
 ```
 
 Następnie, podane wizualizacje przedstawmy w postaci wykresów kołowych.
@@ -284,7 +284,7 @@ data$CZY_ZADOW <- as.factor(as.integer(data$CZY_ZADOW))
 
 ## 2.8. Zadanie 1.8
 
-Sporządź wykresy mozaikowe odpowiadające parom zmiennych: ***CZY_ZADOW*** i ***DZIAŁ***, ***CZY_ZADOW*** i ***STAZ***, ***CZY_ZADOW*** i ***CZY_KIER***, ***CZY_ZADOW*** i ***PLEC*** oraz ***CZY_ZADOW*** i ***WIEK_KAT***. Czy na podstawie uzyskanych wykresów można postawić pewne hipotezy dotyczące relacji między powyższymi zmiennymi? Spróbuj sformułować kilka takich hipotez.
+**Sporządź wykresy mozaikowe odpowiadające parom zmiennych: *CZY_ZADOW* i *DZIAŁ*, *CZY_ZADOW* i *STAZ*, *CZY_ZADOW* i *CZY_KIER*, *CZY_ZADOW* i *PLEC* oraz *CZY_ZADOW* i *WIEK_KAT*. Czy na podstawie uzyskanych wykresów można postawić pewne hipotezy dotyczące relacji między powyższymi zmiennymi? Spróbuj sformułować kilka takich hipotez.**
 
 ### 1. Wykres mozaikowy pary zmiennych CZY_ZADOW i DZIAŁ
 
@@ -380,7 +380,7 @@ plot(likert_df, type = 'bar', legend.position = 'right') +
   ylab('Wartość procentowa') +
   xlab(' ') +
   ggtitle('Wykres typu bar dla zmiennej PYT_1 (cała badana grupa)',
-          subtitle = 'Jak bardzo zgadzasz się ze stwierdzeniem, \n że firma pozwala na elastyczne godziny pracy \n tym samym umożliwiając zachowanie równowagi między pracą a życiem prywatnym?') +
+          subtitle = 'Jak bardzo zgadzasz się ze stwierdzeniem, że firma pozwala\n na elastyczne godziny pracy tym samym umożliwiając \n zachowanie równowagi między pracą a życiem prywatnym?') +
   scale_fill_manual(values = kolory,
                     name = 'Odpowiedzi',
                     labels = c("zdecydowanie się nie zgadzam", 
@@ -418,8 +418,6 @@ plot(likert_df, type = 'density', facet=TRUE) +
                               "zgadzam się", 
                               "zdecydowanie \n się zgadzam")) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
-### Wykres przedstawia rozkład zmiennej PYT_1. Podobnie jak w poprzednich wykresach może
-### wywnioskować, że jest więcej osób, które się zgadzają z stwierdzeniem.
 ```
 
 W następnym kroku wykonaliśmy wykres typu "bar" dla analizowanej zmiennej PYT_1 z podziałem na podgrupy ze względu na zmienną CZY_KIER. Na poniższym diagramie mamy podział na osoby które są menadżerem ('TAK') oraz nie piastują tego stanowiska ('NIE'). Możemy zauważyć, że więcej pracowników firmy, którzy nie mają stanowiska menadżerskiego niż tych które je mają jest zadowolona z elastycznych godzin pracy. Może być to związane z tym, że menadżer posiada z pewnością obowiązków i granica pomiędzy życiem prywatnym a zawodowym może się zacierać.
@@ -633,7 +631,7 @@ Zauważmy że wartości empiryczne parametru p są dostatecznie bliskie wartośc
 
 **Zaproponuj metodę symulowania wektorów losowych z rozkładu wielomianowego. Napisz funkcję do generowania realizacji, a następnie zaprezentuj jej działanie porównując wybrane teoretyczne i empiryczne charakterystyki dla przykładowych wartości paramertów rozkładu: n i p**
 
-Metoda wykorzystana do implementacji znajduje się w publikacji \[2\] i opiera się na metodyce metod odwrotnej dystrybuanty.
+Metoda wykorzystana do implementacji znajduje się w publikacji \[2\] i opiera się na metodyce metody odwrotnej dystrybuanty.
 
 ```{r}
 #| warning: false
@@ -681,9 +679,12 @@ estimated_probs_1 = colMeans(sample_1/n)
 estimated_probs_2 = colMeans(sample_2/n)
 estimated_probs_3 = colMeans(sample_3/n)
 
-sprintf("Estymowany wektor (0.1, 0.3, 0.4, 0.2): (%s).", toString(estimated_probs_1))
-sprintf("Estymowany wektor (0.5, 0.3, 0.2): (%s).", toString(estimated_probs_1))
-sprintf("Estymowany wektor (0.1, 0.1, 0.3, 0.2, 0.3): (%s).", toString(estimated_probs_1))
+sprintf("Estymowany wektor (0.1, 0.3, 0.4, 0.2): (%s).", 
+        toString(estimated_probs_1))
+sprintf("Estymowany wektor (0.5, 0.3, 0.2): (%s).", 
+        toString(estimated_probs_1))
+sprintf("Estymowany wektor (0.1, 0.1, 0.3, 0.2, 0.3): (%s).", 
+        toString(estimated_probs_1))
 ```
 
 Zauważmy, że przy stosunkowo małej wielkości próbki można już zauważyć wyniki potwierdzające zdecydowanie poprawność zaimplementowanej metody.
@@ -696,10 +697,13 @@ Zauważmy, że przy stosunkowo małej wielkości próbki można już zauważyć 
 
 ```{r}
 #| warning: false
-clopper_pearson_confidence_interval <- function(confidence_level, successes=NULL, trials=NULL, vector_data=NULL) {
+clopper_pearson_confidence_interval <- function(confidence_level, 
+                                                successes=NULL, trials=NULL,
+                                                vector_data=NULL) {
   
   if (!is.null(vector_data)) {
-    successes <- sum(vector_data)
+    
+    successes <- length(vector_data[vector_data == 1])
     trials <- length(vector_data)
   }
   alpha <- 1 - confidence_level
@@ -712,7 +716,7 @@ clopper_pearson_confidence_interval <- function(confidence_level, successes=NULL
 
 ## 4.2. Zadanie 7.
 
-**Korzystając z funkcji napisanej w zadaniu 6. wyznacz realizacje przedziałów ufności dla prawdopodobieństwa, że pracownik jest zadowolony z wynagrodzenia w pierwszym badanym okresie oraz w drugim badanym okresie. Skorzystaj ze zmiennych CZY_ZADW oraz CZY_ZADW_2 (utwórz zmienną analogicznie jak w zadaniu 1.7). Przyjmij 1−α = 0.95.**
+**Korzystając z funkcji napisanej w zadaniu 6. wyznacz realizacje przedziałów ufności dla prawdopodobieństwa, że pracownik jest zadowolony z wynagrodzenia w pierwszym badanym okresie oraz w drugim badanym okresie. Skorzystaj ze zmiennych CZY_ZADW oraz CZY_ZADW_2 (utwórz zmienną analogicznie jak w zadaniu 1.7). Przyjmij** $1-\alpha = 0.95$.
 
 Na wstępie utworzymy zmienną CZY_ZADOW_2 analogicznie jak tworzyliśmy zmienną CZY_ZADOW.
 
@@ -751,7 +755,7 @@ Rozważając związek między przedziałami ufności dla prawdopodobieństwa zad
 
 ## 4.3 Zadanie 9.
 
-**Przeprowadź symulacje, których celem jest porównanie prawdopodobińestwa pokrycia i długości przedziałów ufności Cloppera-Pearsona, Walda i trzeciego dowolnego typu zaimplementowanego w funkcji binom.confint. Rozważ 1 − α = 0.95, rozmiar próby n ∈ {30, 100, 1000} i różne wartości prawdopodobieństwa p. Wyniki umieść na wykresach i sformułuj wnioski, które dla konkretnych danych ułatwia wybór konkretenego typu przedziału ufności.**
+**Przeprowadź symulacje, których celem jest porównanie prawdopodobińestwa pokrycia i długości przedziałów ufności Cloppera-Pearsona, Walda i trzeciego dowolnego typu zaimplementowanego w funkcji binom.confint. Rozważ** $1-\alpha = 0.95$**, rozmiar próby** $n \in \{30, 100, 1000\}$ **i różne wartości prawdopodobieństwa p. Wyniki umieść na wykresach i sformułuj wnioski, które dla konkretnych danych ułatwia wybór konkretenego typu przedziału ufności.**
 
 W porównaniu brały udział trzy konstrukcje przedziałów- Walda, Cloppera-Pearsona oraz Agrestiego-Coulla. Porównanie przeprowadziliśmy według poniższej procedury Monte Carlo
 
@@ -767,6 +771,16 @@ Wyniki przedstawiliśmy na wykresach dla poszczególnych $n$ .
 ## $n$ =30
 
 ```{r}
+#| warning: false
+Wald_CI = function(X, n, size, alpha) {
+  p_est <- sum(X)/(n*size)
+  quantile <- qnorm(1-alpha/2, mean = 0, sd = 1)
+  lower_bound <-p_est - quantile * sqrt(p_est * (1-p_est) / n)
+  upper_bound <-p_est + quantile * sqrt(p_est * (1-p_est) / n)
+  CI <- c(lower_bound, upper_bound)
+  return(CI)
+} 
+
 p_s = seq(from=0.01, to= 0.99, length.out = 99)
 
 wald_res_coverage_30 = rep(0,99)
@@ -794,7 +808,8 @@ for (i in 1:99) {
     sample_binom = rbinom(n = 100, size = 30, prob = p_s[i])
     ci_cp = binom.confint(sample_binom, n = 30,alpha = 0.05, methods = "exact")
     temp_len[mcs] <- mean(ci_cp$upper- ci_cp$lower)
-    temp_coverage[mcs] <-sum(mean(ci_cp$lower) < sample_binom/30& sample_binom/30<mean(ci_cp$upper))/100
+    temp_coverage[mcs] <-sum(mean(ci_cp$lower) < sample_binom/30& 
+                               sample_binom/30<mean(ci_cp$upper))/100
   }
   cp_res_len_30[i] <-  mean(temp_len)
   cp_res_coverage_30[i] <-  mean(temp_coverage)
@@ -810,7 +825,8 @@ for (i in 1:99) {
     sample_binom = rbinom(n = 100, size = 30, prob = p_s[i])
     ci_ac = binom.confint(sample_binom, n = 30,alpha = 0.05, methods = "agresti-coull")
     temp_len[mcs] <- mean(ci_ac$upper- ci_ac$lower)
-    temp_coverage[mcs] <-sum(mean(ci_ac$lower) < sample_binom/30& sample_binom/30<mean(ci_ac$upper))/100
+    temp_coverage[mcs] <-sum(mean(ci_ac$lower) < sample_binom/30& 
+                               sample_binom/30<mean(ci_ac$upper))/100
   }
   ac_res_len_30[i] <-  mean(temp_len)
   ac_res_coverage_30[i] <-  mean(temp_coverage)
@@ -821,7 +837,9 @@ for (i in 1:99) {
 ```{r}
 plot(p_s,wald_res_len_30, type = "l", frame = FALSE, pch = 19,
      col = "red",main="Średnia długość przedziału ufności, 
-        n = 30, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "średnia długość przedziału", 
+        n = 30, długość próbki = 100, 1000 MCS", 
+     xlab = "p", 
+     ylab = "średnia długość przedziału", 
      lty = 1, lwd = 2)
 
 lines(p_s, cp_res_len_30, pch = 23, col = "blue", type = "l", 
@@ -830,14 +848,16 @@ lines(p_s, cp_res_len_30, pch = 23, col = "blue", type = "l",
 lines(p_s, ac_res_len_30, pch = 18, col = "green", type = "b", 
       lty = 3, lwd = 2)
 
-legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
-       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+legend("topright", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8, xjust = 1)
 ```
 
 ```{r}
 plot(p_s,wald_res_coverage_30, type = "l", frame = FALSE, pch = 19,
-     col = "red",main="Prawdopodobieństwo pokrycia przedziału ufności, 
-        n = 30, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "prawdopodobieństwo pokrycia", 
+     col = "red",
+     main="Prawdopodobieństwo pokrycia przedziału ufności, 
+        n = 30, długość próbki = 100, 1000 MCS", xlab = "p", 
+     ylab = "prawdopodobieństwo pokrycia", 
      lty = 1, lwd = 2,ylim = c(0.8,1))
 
 lines(p_s, cp_res_coverage_30, pch = 23, col = "blue", type = "l", 
@@ -846,8 +866,8 @@ lines(p_s, cp_res_coverage_30, pch = 23, col = "blue", type = "l",
 lines(p_s, ac_res_coverage_30, pch = 18, col = "green", type = "b", 
       lty = 3, lwd = 2)
 
-legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
-       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+legend("topright", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8, xjust = 1)
 ```
 
 Za pomocą analogicznego kodu wykonujemy procedury oraz wykresy dla pozostałych wartości $n$
@@ -920,8 +940,8 @@ lines(p_s, cp_res_len_100, pch = 23, col = "blue", type = "l",
 lines(p_s, ac_res_len_100, pch = 18, col = "green", type = "b", 
       lty = 3, lwd = 2)
 
-legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
-       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+legend("topright", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8, xjust = 1)
 
 ```
 
@@ -938,8 +958,8 @@ lines(p_s, cp_res_coverage_100, pch = 23, col = "blue", type = "l",
 lines(p_s, ac_res_coverage_100, pch = 18, col = "green", type = "b", 
       lty = 3, lwd = 2)
 
-legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
-       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+legend("topright", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8, xjust = 1)
 ```
 
 ### $n=1000$
@@ -1021,7 +1041,8 @@ Zatem, opierając się na implementacjach proponowanych funkcji, moglibyśmy li
 #| echo: false
 plot(p_s,wald_res_len_1000, type = "l", frame = FALSE, pch = 19,
      col = "red",main="Średnia długość przedziału ufności, 
-        n = 1000, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "średnia długość przedziału", 
+        n = 1000, długość próbki = 100, 1000 MCS", xlab = "p", 
+     ylab = "średnia długość przedziału", 
      lty = 1, lwd = 2)
 
 lines(p_s, cp_res_len_1000, pch = 23, col = "blue", type = "l", 
@@ -1030,8 +1051,8 @@ lines(p_s, cp_res_len_1000, pch = 23, col = "blue", type = "l",
 lines(p_s, ac_res_len_1000, pch = 18, col = "green", type = "b", 
       lty = 3, lwd = 2)
 
-legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
-       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+legend("topright", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8, xjust = 1)
 
 ```
 
@@ -1040,7 +1061,8 @@ legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
 #| echo: false
 plot(p_s,wald_res_coverage_1000, type = "l", frame = FALSE, pch = 19,
      col = "red",main="Prawdopodobieństwo pokrycia przedziału ufności, 
-        n = 1000, długość próbki = 100, 1000 MCS", xlab = "p", ylab = "prawdopodobieństwo pokrycia", 
+        n = 1000, długość próbki = 100, 1000 MCS", xlab = "p", 
+     ylab = "prawdopodobieństwo pokrycia", 
      lty = 1, lwd = 2,ylim = c(0.8,1))
 
 lines(p_s, cp_res_coverage_1000, pch = 23, col = "blue", type = "l", 
@@ -1049,8 +1071,8 @@ lines(p_s, cp_res_coverage_1000, pch = 23, col = "blue", type = "l",
 lines(p_s, ac_res_coverage_1000, pch = 18, col = "green", type = "b", 
       lty = 3, lwd = 2)
 
-legend("topleft", legend = c("Wald CI", "C-P CI", "A-C CI"),
-       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8)
+legend("topright", legend = c("Wald CI", "C-P CI", "A-C CI"),
+       col = c("red", "blue", "green"), lty = 1:3, cex = 0.8, xjust = 1)
 ```
 
 Wnioski są następujące - dla $n =100$ oraz $n=1000$, za sprawą zbieżności przedziałów według rozkładów oraz prawa wielkich liczb które prowadzą do twierdzeń granicznych, nie ma większych różnic zarówno w przypadku średnich długości przedziałów jak i prawdopodobieńśtwa pokrycia. Warto wspomnieć, że dla $n = 30$ oraz dla bardzo dużego zakresu wartości $p$, najwęższymi przedziałami są przedziały Agrestiego-Coulla. Odzwierciedla się to oczywiście w prawdopodobieństwie pokrycia, które naturalnie będzie niższe, ponieważ jest mniejsza szansa, aby proporcje "załapały się" do węższego przedziału. Ta tendencja, choć w mniejszym stopniu zauważalna, to ogólna koneksja pomiędzy prawdopodobieństwem pokrycia a średnią długością przedziałów ufności - dla dużych $n$ z racji tego, że przedziały są tak samo szerokie, szansa na to, by pokrywały badane przez nas wartości proporcji jest porównywalna.
@@ -1059,7 +1081,7 @@ Wnioski są następujące - dla $n =100$ oraz $n=1000$, za sprawą zbieżności 
 
 ## 5.1. Zadanie 11.
 
-**Dla danych z pliku "ankieta.csv" korzystając z funkcji z zadania 8., przyjmując 1 − α = 0.95, zweryfikuj następujęce hipotezy i sformułuj wnioski:**
+**Dla danych z pliku "ankieta.csv" korzystając z funkcji z zadania 8., przyjmując** $1 - \alpha = 0.95$**, zweryfikuj następujęce hipotezy i sformułuj wnioski:**
 
 ### 1. Prawdopodobieństwo, że w firmie pracuje kobieta wynosi 0.5.
 
@@ -1114,7 +1136,7 @@ test_3_df <- data.frame('Testy' = c('Test z poprawką na ciągłość',
                                     'Test bez poprawki na ciągłość'), 
            'P-wartość' = c(test_3_con$p.value, test_3_ucon$p.value))
 
-knitrr::kable(test_3_df)
+knitr::kable(test_3_df)
 ```
 
 Zauważmy, że dla obu testów p-wartość jest większa niż poziom istotności $\alpha = 0.05$, zatem nie ma podstaw do odrzucenia hipotezy zerowej.
@@ -1142,7 +1164,7 @@ test_4_df <- data.frame('Testy' = c('Test z poprawką na ciągłość',
                                     'Test bez poprawki na ciągłość'), 
                         'P-wartość' = c(test_4_con$p.value, test_4_ucon$p.value))
 
-knitrr:kable(test_4_df)
+knitr::kable(test_4_df)
 ```
 
 Zauważmy, że dla obu testów p-wartość jest większa niż poziom istotności $\alpha = 0.05$, zatem nie podstaw do odrzucenia hipotezy zerowej.
@@ -1157,24 +1179,26 @@ sum_hr_woman <- length(data$PLEC[data$PLEC == "K" & data$DZIAL == 'HR'])
 sum_hr_man <- length(data$PLEC[data$PLEC == "M" & data$DZIAL == 'HR'])
 
 test_5_con <- prop.test(c(sum_hr_woman, sum_hr_man), 
-                        c(length(data$PLEC[data$PLEC == "K"]), length(data$PLEC[data$PLEC == "M"])), 
+                        c(length(data$PLEC[data$PLEC == "K"]), 
+                          length(data$PLEC[data$PLEC == "M"])), 
                         alternative = "less", correct = TRUE)
 
 test_5_ucon <- prop.test(c(sum_hr_woman, sum_hr_man), 
-                         c(length(data$PLEC[data$PLEC == "K"]), length(data$PLEC[data$PLEC == "M"])), 
+                         c(length(data$PLEC[data$PLEC == "K"]), 
+                           length(data$PLEC[data$PLEC == "M"])), 
                          alternative = "less", correct = FALSE)
 
 test_5_df <- data.frame('Testy' = c('Test z poprawką na ciągłość', 
                                     'Test bez poprawki na ciągłość'), 
                         'P-wartość' = c(test_5_con$p.value, test_5_ucon$p.value))
-knitrr::kable(test_5_df)
+knitr::kable(test_5_df)
 ```
 
-Zauważmy, że dla obu testów p-wartość jest mniejsza niż poziom istotności alpha = 0.05, zatem należy odrzucić hipotezę zerową.
+Zauważmy, że dla obu testów p-wartość jest mniejsza niż poziom istotności $\alpha =0.05$, zatem należy odrzucić hipotezę zerową.
 
 ## **5.2. Zadanie 12.**
 
-#### Wyznacz symulacyjnie moc testu dokładnego oraz moc testu asymptotycznego w przypadku weryfikacji hipotezy zerowej $H_0: p = 0.9$ przeciwko $H_1: p \neq 0.9$ przyjmując wartość 1 − α = 0.95. Uwzględnij różne wartości alternatyw i różne rozmiary próby. Sformułuj wnioski.
+#### Wyznacz symulacyjnie moc testu dokładnego oraz moc testu asymptotycznego w przypadku weryfikacji hipotezy zerowej $H_0: p = 0.9$ przeciwko $H_1: p \neq 0.9$ przyjmując wartość $1-\alpha = 0.95$. Uwzględnij różne wartości alternatyw i różne rozmiary próby. Sformułuj wnioski.
 
 Do porównania wyznaczonych wartości funkcji mocy zastosowaliśmy poniższą symulacje Monte Carlo:
 
