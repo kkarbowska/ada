@@ -138,10 +138,10 @@ cat('P-wartość:',fisher_test_5$p.value)
 # a zadowoleniem z wynagrodzenia w pierwszym badanym okresie.
 
 ## 6. zadowolenie z wynagrodzenia w pierwszym badanym okresie nie zalezy od wieku (PYT_2 oraz WIEK_KAT),
-ftable_PYT2_WIEK_KAT <- ftable('Poziom zadowolenia w 1. badanym okresie' = data$PYT_2, 'Kategoria wiekowa' = data$CZY_KIER)
+ftable_PYT2_WIEK_KAT <- table('Poziom zadowolenia w 1. badanym okresie' = data$PYT_2, 'Kategoria wiekowa' = data$WIEK_KAT)
 ftable_PYT2_WIEK_KAT
 
-fisher_test_6 <- fisher.test(ftable_PYT2_WIEK_KAT, conf.int = TRUE)
+fisher_test_6 <- fisher.test(ftable_PYT2_WIEK_KAT, conf.int = TRUE, workspace = 500000)
 fisher_test_6
 # cat('Przedziały ufności:',fisher_test_1$conf.int)
 cat('P-wartość:',fisher_test_6$p.value)
@@ -152,4 +152,119 @@ cat('P-wartość:',fisher_test_6$p.value)
 # która zakłada, że zadowolenie z wynagrodzenia w pierwszym badanym okresie nie zależy od wieku.
 # Innymi słowy, istnieje prawdopodobieństwo, że wiek ma istotny wpływ na poziom zadowolenia z wynagrodzenia 
 # w badanym okresie.
+
+### Lista 2. część 3 ###
+
+## Zadanie 8
+## Korzystaj ˛ac z chisq.test zweryfikuj hipotez˛e, ze zadowolenie z wynagrodzenia ˙
+## w pierwszym badanym okresie nie zalezy od zajmowanego stanowiska. Przyjmij poziom ˙
+## istotnosci 0.01. Stwórz wykres przy pomocy funkcji assocplot i dokonaj jego interpretacji.
+## Wynik testu porównaj z wynikiem uzyskanym w zadaniu 6.
+
+## W zadaniu 6 test 3 sprawdza hipotezę że zadowolenie z wynagrodzenia w pierwszym badanym okresie nie zależy 
+## od zajmowanego stanowiska (ftable_PYT2_CZY_KIER)
+
+# Test Chi-kwadrat testuje hipotezę zerową o niezależności zmiennych.
+chisq_test_PYT2_CZY_KIER <- chisq.test(ftable_PYT2_CZY_KIER)
+chisq_test_PYT2_CZY_KIER
+
+cat('P-wartość:',chisq_test_PYT2_CZY_KIER$p.value)
+
+# W tym zadaniu ponownie przetestowaliśmy hipotezę zerową, sugerującą brak zależności między 
+# zadowoleniem z wynagrodzenia a zajmowanym stanowiskiem w pierwszym badanym okresie. 
+# Tym razem zdecydowaliśmy się wykorzystać test chi-kwadrat do weryfikacji tej hipotezy. 
+# Wynik testu w postaci p-wartości wynoszącej 0.004397 wykazał, że przy założonym poziomie istotności 0.01 
+# istnieją wystarczające podstawy do odrzucenia hipotezy zerowej. Porównując test chi-kwadrat z testem Fishera, 
+# oba wykazują odrzucenie hipotezy zerowej na poziomie istotności 0.05. 
+# Jednakże tylko test chi-kwadrat utrzymuje to odrzucenie na poziomie istotności 0.01.
+
+assocplot(ftable_PYT2_CZY_KIER, col = c("lightblue", "pink"), main = 'Zależność pomiędzy zmiennymi',xlab = "Poziom zadowolenia w 1. badanym okresie", ylab = "Stanowisko kierownicze")
+
+
+# Na wykresie asocjacji zauważamy, że prostokąty nie są równomiernie rozłożone. 
+# Ich różne wielkości sugerują, że istnieje związek między zmiennymi. 
+# Wartości prostokątów są znacząco różne, co wskazuje na nielosowy charakter występowania danych kategorii zmiennych. 
+# Jednakże, na podstawie samej różnorodności wielkości prostokątów nie możemy jednoznacznie stwierdzić, czy zmienne są niezależne. 
+# Konieczne jest przeprowadzenie dodatkowych analiz, takich jak test statystyczny,
+# co wykonaliśmy wcześniej i potwierdziło to że zmienne są najprawdopodobniej zależne.
+
+
+## Zadanie 10 Napisz funkcj˛e, która dla danych z tablicy dwudzielczej oblicza wartos´c poziomu ´
+## krytycznego w tescie niezale ´ znosci opartym na ilorazie wiarogodnosci. Korzystaj ˛ac z napisanej ˙
+## funkcji, wykonaj test dla danych z zadania 8.
+
+test_IW <- function(table){
+  # liczba obserwacji
+  n <- sum(table)
+  C <- ncol(table)
+  R <- nrow(table)
+  
+  # rozkłady brzegowe
+  R_totals <- rowSums(table)
+  C_totals <- colSums(table)
+  
+  outer_table <- outer(R_totals, C_totals)
+  
+  expected <- (outer_table/(table*n))^table
+  
+  lambda <- prod(expected)
+  G2 <- -2*log(lambda)
+  
+  df <- (R-1)*(C-1)
+  p_value <- 1-pchisq(G2, df)
+  
+  return (p_value)
+}
+
+cat('P-wartość: ',test_IW(ftable_PYT2_CZY_KIER))
+
+# Dla danych z zadania 6 p-wartość wynosi 0.03969. Jeśli weźmiemy poziom istotności 0.01 to nie podstaw
+# do odrzucenia, natomiast dla poziomu istotności 0.05 należy odrzucić hipotezę zerową.
+
+
+# Zadanie 9. Zapoznaj si˛e z funkcj ˛a rmultinom z pakietu stats, a nast˛epnie korzystaj ˛ac z niej
+# przeprowad´z symulacje w celu oszacowania mocy testu Fishera oraz mocy testu chi-kwadrat
+# Pearsona, generuj ˛ac dane z tabeli 2 × 2, w której p11 = 1/40, p12 = 3/40, p21 = 19/40,
+# p22 = 17/40. Symulacje wykonaj dla n = 50, n = 100 oraz n = 1000.
+set.seed(12345)
+
+simulate_power <- function(MC=500, alpha, n, p){
+  power_fisher <- rep(0, MC)
+  power_chisq <- rep(0, MC)
+  power_chisq_uncorrect <- rep(0, MC)
+  
+  for (i in 1:MC) {
+    multi <- rmultinom(n=1, size=n, prob=p)
+    
+    fisher_test <- fisher.test(matrix(multi, nrow=2))
+    power_fisher[i] <- as.numeric(fisher_test$p.value < alpha)
+    
+    chisq_test <- chisq.test(matrix(multi+0.00000001, nrow=2), correct = TRUE) 
+    power_chisq[i] <- as.numeric(chisq_test$p.value < alpha)
+    
+    chisq_test_uncorrect <- chisq.test(matrix(multi+0.00000001, nrow=2), simulate.p.value = TRUE)
+    power_chisq_uncorrect[i] <- as.numeric(chisq_test_uncorrect$p.value < alpha)
+    
+    p_value_chisq <- chisq.test(matrix(multi+0.00000001, nrow=2), correct = TRUE)$p.value
+    p_value_chisq_uncorrect <- chisq.test(matrix(multi+0.00000001, nrow=2), simulate.p.value = TRUE)$p.value
+  }
+  
+  return(c(mean(power_fisher), mean(power_chisq), mean(power_chisq_uncorrect)))
+}
+
+p <- c(1/40, 3/40, 19/40, 17/40)
+# dla alpha 0.05
+power_50 <- simulate_power(MC=500, alpha=0.05, n=50, p)
+power_100 <- simulate_power(MC=500, alpha=0.05, n=100, p)
+power_1000 <- simulate_power(MC=500, alpha=0.05, n=1000, p)
+
+df_05 <- data.frame('Typ testu' = c('test Fishera', 'test Chi2 z poprawką', 'test Chi2 bez poprawki'), 'n=50' = power_50, 'n=100' = power_100, 'n=1000'= power_1000)
+view(df_05)
+
+power_50_01 <- simulate_power(MC=500, alpha=0.01, n=50, p)
+power_100_01 <- simulate_power(MC=500, alpha=0.01, n=100, p)
+power_1000_01 <- simulate_power(MC=500, alpha=0.01, n=1000, p)
+
+df_01 <- data.frame('Typ testu' = c('test Fishera', 'test Chi2 z poprawką', 'test Chi2 bez poprawki'), 'n=50' = power_50_01, 'n=100' = power_100_01, 'n=1000'= power_1000_01)
+view(df_01)
 
