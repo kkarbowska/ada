@@ -1,5 +1,11 @@
+setwd("/Users/maciejostapiuk/projects/ada/report_2/")
 ## Lista 2. Część 2.###
 ### operacje na danych jak wcześniej 
+library(ggplot2)
+library(tidyverse)
+library(stats)
+library(dplyr)
+library(MultinomialCI)
 
 data <- read.csv("ankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
 
@@ -27,6 +33,87 @@ data <- mutate(data, CZY_ZADOW_2 = ifelse(as.numeric(as.character(PYT_3)) == -2,
                                                         ifelse(as.numeric(as.character(PYT_3)) == 2, 1, "_")))))
 
 data$CZY_ZADOW_2 <- as.factor(as.integer(data$CZY_ZADOW_2))
+
+
+view(data)
+
+
+
+##  zadanie 1. W ankiecie przedstawionej na poprzedniej liście pracownicy zostali poproszeni
+##  o wyrażenie opinii na temat podejścia firmy do utrzymania równowagi między życiem
+##  zawodowym a prywatnym. Wsród próbki 200 pracowników (losowanie proste ze zwracaniem)
+##  uzyskano wyniki:
+##    • 14 pracowników - bardzo niezadowolonych,
+##    • 17 pracowników - niezadowolonych,
+##    • 40 pracowników - nie ma zdania,
+##    • 100 pracowników - zadowolonych,
+##    • 29 pracowników - bardzo zadowolonych,
+##  Na podstawie danych wyznacz przedział ufności dla wektora prawodobieństw opisującego
+##  stopień zadowolenia z podejścia firmy. Przyjmij poziom ufności 0.95.
+
+responses <-c("very dissatisfied"=14, "dissatisfied"=17, "neither sattisfied nor dissatisfied"=40, "satisfied" = 100, "highly satisfied" = 29)
+responses_probs <- responses/200
+res <- multinomialCI(responses, alpha = 0.05)
+
+print(paste("very dissatisfied: [", res[1,1], res[1,2], "]"))
+print(paste("dissatisfied: [", res[2,1], res[2,2], "]"))
+print(paste("neither sattisfied nor dissatisfied: [", res[3,1], res[3,2], "]"))
+print(paste("satisfied: [", res[4,1], res[4,2], "]"))
+print(paste("very satisfied: [", res[5,1], res[5,2], "]"))
+
+
+##  zadanie 2. Napisz funkcj˛e, która wyznacza warto´s´c poziomu krytycznego w nast˛epuj ˛acych
+##  testach:
+##    • chi-kwadrat Pearsona
+##    • chi-kwadrat najwi˛ekszej wiarogodno´sci
+##  słu˙z ˛acych do weryfikacji hipotezy H0 : p = p0 przy hipotezie alternatywnej H0 : p̸ = p0 na
+##  podstawie obserwacji x wektora losowego X z rozkładu wielomianowego z parametrami n i p
+
+
+get_p_value <-function(x,n,h_0){
+  #' Calculates p_values of user's choice test: either chi-square or maximum-likelihood chi-square
+  sample <-  rmultinom(1, sum(x), h_0)
+  point_probs_estimator = sample/n
+  
+  chi_square_test_statistic <- sum((x - n*h_0)^2/(n*h_0))
+  chi_square_maximum_likelihood_test_statistic <- sum((x - n*point_probs_estimator)^2/(n*point_probs_estimator))
+  k <-  length(x)
+  
+  p_value_chi_sq <- 1-pchisq(chi_square_test_statistic, df = k-1)
+  
+  p_value_chi_sq_max_likelihood <- 1-pchisq(chi_square_maximum_likelihood_test_statistic, df = k-1)
+  
+  return(c("p_value of chi-square test" = p_value_chi_sq, "p_value of maximum-likelihood chi-square test" = p_value_chi_sq_max_likelihood ))
+}
+
+sample_multinom <-  rmultinom(1, 100, c(0.1, 0.2, 0.4, 0.2, 0.1))
+
+null_hypothesis <-get_p_value(x = sample_multinom, n = 100, h_0 = c(0.1, 0.2, 0.4, 0.2, 0.1))
+
+alternative_hypothesis <-  get_p_value(x = sample_multinom, n = 100, h_0 = c(0.1, 0.2, 0.2, 0.4, 0.1))
+
+null_hypothesis
+
+alternative_hypothesis
+
+##  zadanie 3. Na podstawie danych z ankiety z poprzedniej listy zweryfikuj hipoteze, ze w grupie
+##  pracowników zatrudnionwych w Dziale Kreatywnym rozkład odpowiedzi na pytanie dotycz ˛ace
+##  podej´scia firmy do utrzymania równowagi mi˛edzy ˙zyciem zawodowym a prywatnym jest
+##  równomierny, tzn. jest jednakowe prawdopodobie´nstwo, ˙ze pracownik zatrudniony w Dziale
+##  Kreatywnym jest udzielił odpowiedzi "zdecydowanie si˛e nie zgadzam", "nie zgadzam si˛e", "nie
+##  mam zdania", "zgadzam si˛e", "zdecydowanie si˛e zgadzam"na pytanie PYT_1. Przyjmij poziom
+##  istotno´sci 0.05. Skorzystaj z funkcji napisanej w zadaniu 2.
+
+counts <- data %>%
+  filter(DZIAL == "DK") %>%
+  group_by(PYT_1) %>%
+  summarise(count = n())
+
+communications_emps_responses <-  counts$count
+print(communications_emps_responses)
+
+
+get_p_value(communications_emps_responses, 98, c(0.2, 0.2, 0.2, 0.2, 0.2))
 
 ## Zadanie 5
 ## Korzystajac z testu Fishera, na poziomie istotnosci 0.05, zweryfikuj hipotez˛e, ze˙
@@ -268,3 +355,58 @@ power_1000_01 <- simulate_power(MC=500, alpha=0.01, n=1000, p)
 df_01 <- data.frame('Typ testu' = c('test Fishera', 'test Chi2 z poprawką', 'test Chi2 bez poprawki'), 'n=50' = power_50_01, 'n=100' = power_100_01, 'n=1000'= power_1000_01)
 view(df_01)
 
+
+
+
+##  zadanie 11. Przeprowadzone wsród brytyjskich m˛e˙zczyzn badanie trwaj ˛ace 20 lat wykazało, ˙ze
+##  odsetek zmarłych (na rok) z powodu raka płuc wynosił 0, 00140 wsród osób pal ˛acych papierosy
+##  i 0,00010 wsród osób niepal ˛acych. Odsetek zmarłych z powodu choroby niedokrwiennej
+##  serca wynosił 0, 00669 dla palaczy i 0, 00413 dla osób niepal ˛acych. Opisz zwi ˛azek pomi˛edzy
+##  paleniem papierosów a ´smierci ˛a z powodu raka płuc oraz zwi ˛azek pomi˛edzy paleniem
+##  papierosów a ´smierci ˛a z powodu choroby serca. Skorzystaj z ró˙znicy proporcji, ryzyka
+##  wzgl˛ednego i ilorazu szans. Zinterpretuj warto´sci. Zwi ˛azek której pary zmiennych jest
+##  silniejszy?
+
+smokers_tab <- matrix(c(0.00669,0.00140, 0.00413, 0.00010), nrow = 2, ncol = 2)
+
+
+## ischemic heart disease and smoking
+proportion_differences_disease_smoking = smokers_tab[1,1] - smokers_tab[1,2]
+RR_disease_smoking = smokers_tab[1,2]/smokers_tab[1,1]
+
+## lung cancer and smoking 
+
+proportion_differences_cancer_smoking<- smokers_tab[2,1] - smokers_tab[2,2]
+RR_cancer_smoking<- smokers_tab[2,2]/smokers_tab[2,1]
+
+OR <- (smokers_tab[1,1]*smokers_tab[1,1])/(smokers_tab[1,2]*smokers_tab[2,1])
+
+
+##  zadanie 12. Tabela przedstawia wyniki dotycz ˛ace ´smiertelno´sci kierowców i pasa˙zerów w
+##  wypadkach samochodowych na Florydzie w 2008 roku, w zale˙zno´sci od tego, czy osoba miała
+##  zapi˛ety pas bezpiecze´nstwa czy nie.
+
+
+accidents <- matrix(c(1085, 703, 55623, 441239), nrow = 2, ncol = 2)
+accidents_probs <-  accidents/sum(accidents)
+sum_without_seatbelts <- 1085 + 55623
+sum_seatbelts <- 703 + 441239
+sum_mortal <-  1085 + 703
+sum_immortal <- 55623 + 441239
+
+prob_death_seatbelts = sum_seatbelts/sum(accidents) *  703/sum_seatbelts
+
+prob_death_without_seatbelts = sum_without_seatbelts/sum(accidents) *  1085/sum_without_seatbelts
+
+
+prob_seatbelts_death <- (sum_seatbelts*(703/sum_seatbelts)/sum(accidents))/(sum_seatbelts*(703/sum_seatbelts)/sum(accidents) + sum_without_seatbelts*(1085/sum_without_seatbelts)/sum(accidents))
+
+prob_without_seatbelts_death <- (sum_without_seatbelts*(1085/sum_without_seatbelts)/sum(accidents))/(sum_seatbelts*(703/sum_seatbelts)/sum(accidents) + sum_without_seatbelts*(1085/sum_without_seatbelts)/sum(accidents))
+
+
+## najbardziej naturalny wybór jest, aby wybrać zmienną objaśnianą śmiertelność wypadku - wtedy zmienna objaśniająca, czyli fakt zapięcia pasów bądź nie pozwala ustalić wiele rzeczy, takich jak, przyczyny zgonu chociazby
+
+
+proportion_differences_mortal<- accidents_probs[1,1] - accidents_probs[2,1]
+RR_mortal <-  accidents_probs[2,1]/accidents_probs[1,1]
+OR_mortal <-  accidents_probs[2,1]*(1 - accidents_probs[2,1])/(accidents_probs[1,1]*(1 - accidents_probs[1,1]))
