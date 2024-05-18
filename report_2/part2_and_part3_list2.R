@@ -6,7 +6,8 @@ library(tidyverse)
 library(stats)
 library(dplyr)
 library(MultinomialCI)
-
+library(matlib)
+library(DescTools)
 data <- read.csv("ankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
 
 data <- data %>%
@@ -406,7 +407,71 @@ prob_without_seatbelts_death <- (sum_without_seatbelts*(1085/sum_without_seatbel
 
 ## najbardziej naturalny wybór jest, aby wybrać zmienną objaśnianą śmiertelność wypadku - wtedy zmienna objaśniająca, czyli fakt zapięcia pasów bądź nie pozwala ustalić wiele rzeczy, takich jak, przyczyny zgonu chociazby
 
-
 proportion_differences_mortal<- accidents_probs[1,1] - accidents_probs[2,1]
 RR_mortal <-  accidents_probs[2,1]/accidents_probs[1,1]
 OR_mortal <-  accidents_probs[2,1]*(1 - accidents_probs[2,1])/(accidents_probs[1,1]*(1 - accidents_probs[1,1]))
+
+##  zadanie 13. Oblicz warto´sci odpowiednich miar współzmienno´sci (współczynnik tau lub
+##  współczynnik gamma) dla zmiennych:
+##    • zadowolenie z wynagrodzenia w pierwszym badanym okresie i zajmowane stanowisko,
+##    • zadowolenie z wynagrodzenia w pierwszym badanym okresie i sta˙z pracy,
+##    • zajmowane stanowisko i sta˙z pracy
+
+
+czy_zadw_czy_kier_tau <- GoodmanKruskalTau(data$CZY_ZADOW,data$CZY_KIER)
+czy_zadw_czy_kier_gamma <-  GoodmanKruskalGamma(data$CZY_ZADOW,data$CZY_KIER)
+
+
+pyt_2_staż_tau <-  GoodmanKruskalTau(data$PYT_2, data$STAZ)
+pyt_2_staż_gamma <-  GoodmanKruskalGamma(data$PYT_2, data$STAZ)
+
+
+pyt_2_czy_kier_staż_tau <- GoodmanKruskalTau(data$CZY_KIER, data$STAZ)
+pyt_2_czy_kier_staż_gamma <- GoodmanKruskalGamma(data$CZY_KIER, data$STAZ)
+
+
+
+##  zadanie 14. Na podstawie informacji przedstawionych na wykładzie napisz własn ˛a funkcj˛e
+##  do przeprowadzania analizy korespondencji. Funkcja powinna przyjmowa´c jako argument
+##  tablic˛e dwudzielcz ˛a i zwraca´c obliczone warto´sci odpowiednich wektorów i macierzy,
+##  współrz˛ednych punktów oraz odpowiedni wykres. Korzystaj ˛ac z napisanej funkcji wykonaj
+##  analiz˛e korespondencji dla danych dotycz ˛acych zadowolenia z wynagrodzenia w pierwszym
+##  badanym okresie i sta˙zu pracy.
+
+correspondence <- function(crosstab){
+  N <- crosstab %>% as.matrix()
+  
+  P <-  N/sum(N)
+  
+  r <- P %>%  rowSums()
+  c <- P %>%  colSums()
+  
+  D_r <-diag(r)
+  D_c <-diag(c)
+  
+  R <-  solve(D_r)%*%P
+  
+  C <- P%*%solve(D_c)
+  
+  A <- solve(D_r^(1/2))%*%(P - r%*%t(c))%*%solve(D_c^(1/2))
+  
+  chi_sq <- sum(N) *sum(A^2)
+  
+  U <-  svd(A)$u
+  Gamma_matrix <-  diag(svd(A)$d)
+  V_transpose <-  svd(A)$v
+  
+  F_matrix <-  solve(D_r^(1/2))%*%U*Gamma_matrix
+  
+  G_matrix <-  solve(D_c^(1/2))%*%V_transpose%*%Gamma_matrix
+  
+  
+  return(list(F_matrix, G_matrix))
+}
+
+pyt_2_staz <- table(data$CZY_ZADOW, data$STAZ)
+pyt_2_staz
+
+correspondence(pyt_2_staz)
+
+
