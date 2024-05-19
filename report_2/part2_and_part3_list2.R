@@ -399,7 +399,7 @@ sum_seatbelts <- 703 + 441239
 sum_mortal <-  1085 + 703
 sum_immortal <- 55623 + 441239
 
-prob_death_seatbelts = sum_seatbelts/sum(accidents) *  703/sum_seatbelts
+prob_death_seatbelts = 703/sum_seatbelts
 
 prob_death_without_seatbelts = sum_without_seatbelts/sum(accidents) *  1085/sum_without_seatbelts
 
@@ -433,7 +433,7 @@ pyt_2_staż_gamma <-  GoodmanKruskalGamma(data$PYT_2, data$STAZ)
 
 data <- mutate(data, CZY_STAZ = ifelse(as.numeric(STAZ) == 1, 0, 1))
 
-czy_kier_staż_tau<- GoodmanKruskalGamma(ftable_CZY_KIER_STAZ)
+czy_kier_staż_tau<- GoodmanKruskalTau(ftable_CZY_KIER_STAZ)
 
 
 ##  zadanie 14. Na podstawie informacji przedstawionych na wykładzie napisz własn ˛a funkcj˛e
@@ -483,3 +483,7 @@ ggplot(coordinates, aes(x = D1, y = D2, color = Kind, shape = Kind, label = Valu
   theme(plot.title = element_text(hjust=0.5), legend.position = "left")
 
 plot.ca(ca(pyt_2_staz, nd =2))
+
+ca(pyt_2_staz, nd =2)
+ca_pyt_2_staz
+
