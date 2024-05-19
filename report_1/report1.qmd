@@ -102,7 +102,7 @@ data <- data %>%
 ```{r}
 #| warning: false
 przedzialy_wiekowe <- c(0, 35, 45, 55, Inf)
-nazwy_kategori <- c("0-35", "36-45", "46-55", "55+")
+nazwy_kategorii <- c("0-35", "36-45", "46-55", "55+")
 data$WIEK_KAT <- cut(data$WIEK, przedzialy_wiekowe, labels = nazwy_kategori, include.lowest = TRUE)
 ```
 

@@ -372,14 +372,16 @@ smokers_tab <- matrix(c(0.00669,0.00140, 0.00413, 0.00010), nrow = 2, ncol = 2)
 
 ## ischemic heart disease and smoking
 proportion_differences_disease_smoking = smokers_tab[1,1] - smokers_tab[1,2]
-RR_disease_smoking = smokers_tab[1,2]/smokers_tab[1,1]
-
+RR_disease_smoking = smokers_tab[1,1]/smokers_tab[1,2]
+OR_disease_smoking <- RR_disease_smoking * (1 - smokers_tab[1,2])/ (1 - smokers_tab[1,1])
 ## lung cancer and smoking 
 
 proportion_differences_cancer_smoking<- smokers_tab[2,1] - smokers_tab[2,2]
-RR_cancer_smoking<- smokers_tab[2,2]/smokers_tab[2,1]
+RR_cancer_smoking<- smokers_tab[2,1]/smokers_tab[2,2]
 
-OR <- (smokers_tab[1,1]*smokers_tab[1,1])/(smokers_tab[1,2]*smokers_tab[2,1])
+OR_cancer_smoking <- RR_disease_smoking * (1 - smokers_tab[2,2])/ (1 - smokers_tab[2,1]) 
+
+### Z uwagi na ryzyko wzgledne, silniejszy związek to związek palenia papierosów ze śmiercią z powodu raka płuc
 
 
 ##  zadanie 12. Tabela przedstawia wyniki dotycz ˛ace ´smiertelno´sci kierowców i pasa˙zerów w
@@ -407,8 +409,8 @@ prob_without_seatbelts_death <- (sum_without_seatbelts*(1085/sum_without_seatbel
 ## najbardziej naturalny wybór jest, aby wybrać zmienną objaśnianą śmiertelność wypadku - wtedy zmienna objaśniająca, czyli fakt zapięcia pasów bądź nie pozwala ustalić wiele rzeczy, takich jak, przyczyny zgonu chociazby
 
 proportion_differences_mortal<- accidents_probs[1,1] - accidents_probs[2,1]
-RR_mortal <-  accidents_probs[2,1]/accidents_probs[1,1]
-OR_mortal <-  accidents_probs[2,1]*(1 - accidents_probs[2,1])/(accidents_probs[1,1]*(1 - accidents_probs[1,1]))
+RR_mortal <-  accidents_probs[1,1]/accidents_probs[2,1]
+OR_mortal <-  RR_mortal * (1 - smokers_tab[2,1])/ (1 - smokers_tab[1,1]) 
 
 ##  zadanie 13. Oblicz warto´sci odpowiednich miar współzmienno´sci (współczynnik tau lub
 ##  współczynnik gamma) dla zmiennych:
@@ -418,16 +420,19 @@ OR_mortal <-  accidents_probs[2,1]*(1 - accidents_probs[2,1])/(accidents_probs[1
 
 
 czy_zadw_czy_kier_tau <- GoodmanKruskalTau(data$CZY_ZADOW,data$CZY_KIER)
-czy_zadw_czy_kier_gamma <-  GoodmanKruskalGamma(data$CZY_ZADOW,data$CZY_KIER)
 
 
-pyt_2_staż_tau <-  GoodmanKruskalTau(data$PYT_2, data$STAZ)
 pyt_2_staż_gamma <-  GoodmanKruskalGamma(data$PYT_2, data$STAZ)
 
 
-pyt_2_czy_kier_staż_tau <- GoodmanKruskalTau(data$CZY_KIER, data$STAZ)
-pyt_2_czy_kier_staż_gamma <- GoodmanKruskalGamma(data$CZY_KIER, data$STAZ)
 
+
+### czy_zadw, czy kier to typowe zmienne nominalne (dychotomiczne), staż to zmienna kategoryczna(porządkowa) tak samo jak Pyt_2
+## do 3. podpunktu stworzymy nominalny odpowiednik zmiennej staz CZY_STAZ: 1, jeżeli staż jest dłuższy niż 1. rok, 0 jeżeli nie
+
+data <- mutate(data, CZY_STAZ = ifelse(as.numeric(STAZ) == 1, 0, 1))
+
+pyt_2_czy_kier_staż_tau<- GoodmanKruskalGamma(data$CZY_KIER, data$STAZ)
 
 
 ##  zadanie 14. Na podstawie informacji przedstawionych na wykładzie napisz własn ˛a funkcj˛e
