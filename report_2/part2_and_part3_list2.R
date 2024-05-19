@@ -9,6 +9,9 @@ library(binom)
 library(binomCI)
 library(MultinomialCI)
 library(matlib)
+library(ca)
+library(FactoMineR)
+library(factoextra)
 library(DescTools)
 data <- read.csv("ankieta.csv", sep = ';', col.names = c('DZIAL', 'STAZ', 'CZY_KIER', 'PYT_1', 'PYT_2', 'PYT_3', 'PLEC', 'WIEK'))
 
@@ -420,8 +423,6 @@ OR_mortal <-  RR_mortal * (1 - smokers_tab[2,1])/ (1 - smokers_tab[1,1])
 
 
 czy_zadw_czy_kier_tau <- GoodmanKruskalTau(data$CZY_ZADOW,data$CZY_KIER)
-
-
 pyt_2_staż_gamma <-  GoodmanKruskalGamma(data$PYT_2, data$STAZ)
 
 
@@ -432,7 +433,7 @@ pyt_2_staż_gamma <-  GoodmanKruskalGamma(data$PYT_2, data$STAZ)
 
 data <- mutate(data, CZY_STAZ = ifelse(as.numeric(STAZ) == 1, 0, 1))
 
-pyt_2_czy_kier_staż_tau<- GoodmanKruskalGamma(data$CZY_KIER, data$STAZ)
+czy_kier_staż_tau<- GoodmanKruskalGamma(ftable_CZY_KIER_STAZ)
 
 
 ##  zadanie 14. Na podstawie informacji przedstawionych na wykładzie napisz własn ˛a funkcj˛e
@@ -444,38 +445,41 @@ pyt_2_czy_kier_staż_tau<- GoodmanKruskalGamma(data$CZY_KIER, data$STAZ)
 
 correspondence <- function(crosstab){
   N <- crosstab %>% as.matrix()
-  
   P <-  N/sum(N)
-  
   r <- P %>%  rowSums()
   c <- P %>%  colSums()
-  
   D_r <-diag(r)
   D_c <-diag(c)
-  
   R <-  solve(D_r)%*%P
-  
   C <- P%*%solve(D_c)
-  
-  A <- solve(D_r^(1/2))%*%(P - r%*%t(c))%*%solve(D_c^(1/2))
-  
+  A <- solve(D_r)^(1/2)%*%(P - r%*%t(c))%*%solve(D_c)^(1/2)
   chi_sq <- sum(N) *sum(A^2)
-  
   U <-  svd(A)$u
-  Gamma_matrix <-  diag(svd(A)$d)
-  V_transpose <-  svd(A)$v
-  
-  F_matrix <-  solve(D_r^(1/2))%*%U*Gamma_matrix
-  
-  G_matrix <-  solve(D_c^(1/2))%*%V_transpose%*%Gamma_matrix
-  
-  
-  return(list(F_matrix, G_matrix))
+  Gamma_vec <-  svd(A)$d
+  V <-  svd(A)$v
+  nd <-  min(nrow(crosstab), ncol((crosstab))) - 1
+  F_matrix <-  solve(D_r)^(1/2)%*%U[,1:nd]%*%diag(Gamma_vec[1:nd])
+  G_matrix <-  solve(D_c)^(1/2)%*%V[,1:nd]%*%diag(Gamma_vec[1:nd])
+  inertia <-  sum(diag(A%*%t(A)))
+  return(list(F_matrix, G_matrix, r,c, R, C, P, inertia, chi_sq))
 }
 
-pyt_2_staz <- table(data$CZY_ZADOW, data$STAZ)
-pyt_2_staz
+pyt_2_staz <- table(data[c("STAZ", "PYT_2")])
 
-correspondence(pyt_2_staz)
+ca_pyt_2_staz <- correspondence(pyt_2_staz)
+F_matrix <- ca_pyt_2_staz[[1]]
+G_matrix <- ca_pyt_2_staz[[2]]
 
+rows <-  data.frame("D1" = F_matrix[,1], "D2"=F_matrix[,2], "Value" = rownames(pyt_2_staz))
+columns <-  data.frame("D1" = G_matrix[,1], "D2"=G_matrix[,2], "Value" = colnames(pyt_2_staz))
+coordinates <- rbind( data.frame("D1" = rows$D1, "D2" =rows$D2, "Value" = rows$Value, "Kind" = "STAZ"), data.frame("D1" = columns$D1, "D2" = columns$D2, "Value" = columns$Value, "Kind" ="PYT_2"))
 
+ggplot(coordinates, aes(x = D1, y = D2, color = Kind, shape = Kind, label = Value)) +
+  geom_point(size = 3) +
+  geom_text(vjust = -0.5) +
+  theme_minimal() +
+  labs(x = "Dimension 1", y = "Dimension 2") +
+  ggtitle("Analiza korespondencji dla zmiennych STAŻ oraz PYT_2")+
+  theme(plot.title = element_text(hjust=0.5), legend.position = "left")
+
+plot.ca(ca(pyt_2_staz, nd =2))
