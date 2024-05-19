@@ -5,6 +5,8 @@ library(ggplot2)
 library(tidyverse)
 library(stats)
 library(dplyr)
+library(binom)
+library(binomCI)
 library(MultinomialCI)
 library(matlib)
 library(DescTools)
@@ -52,15 +54,12 @@ view(data)
 ##  Na podstawie danych wyznacz przedział ufności dla wektora prawodobieństw opisującego
 ##  stopień zadowolenia z podejścia firmy. Przyjmij poziom ufności 0.95.
 
-responses <-c("very dissatisfied"=14, "dissatisfied"=17, "neither sattisfied nor dissatisfied"=40, "satisfied" = 100, "highly satisfied" = 29)
-responses_probs <- responses/200
-res <- multinomialCI(responses, alpha = 0.05)
 
-print(paste("very dissatisfied: [", res[1,1], res[1,2], "]"))
-print(paste("dissatisfied: [", res[2,1], res[2,2], "]"))
-print(paste("neither sattisfied nor dissatisfied: [", res[3,1], res[3,2], "]"))
-print(paste("satisfied: [", res[4,1], res[4,2], "]"))
-print(paste("very satisfied: [", res[5,1], res[5,2], "]"))
+responses <-c("very dissatisfied"=14, "dissatisfied"=17, "neither sattisfied nor dissatisfied"=40, "satisfied" = 100, "highly satisfied" = 29)
+res_binom_ci <- binom.confint(responses, c(200, 200, 200, 200, 200), conf.level = 0.95, methods = c("exact", "asymptotic"))
+res_multinom_ci <- multinomialCI(responses, alpha = 0.05/5)
+
+
 
 
 ##  zadanie 2. Napisz funkcj˛e, która wyznacza warto´s´c poziomu krytycznego w nast˛epuj ˛acych
