@@ -372,19 +372,26 @@ view(df_01)
 
 smokers_tab <- matrix(c(0.00669,0.00140, 0.00413, 0.00010), nrow = 2, ncol = 2)
 
-
 ## ischemic heart disease and smoking
 proportion_differences_disease_smoking = smokers_tab[1,1] - smokers_tab[1,2]
 RR_disease_smoking = smokers_tab[1,1]/smokers_tab[1,2]
 OR_disease_smoking <- RR_disease_smoking * (1 - smokers_tab[1,2])/ (1 - smokers_tab[1,1])
-## lung cancer and smoking 
 
+
+## lung cancer and smoking 
 proportion_differences_cancer_smoking<- smokers_tab[2,1] - smokers_tab[2,2]
 RR_cancer_smoking<- smokers_tab[2,1]/smokers_tab[2,2]
+OR_cancer_smoking <- RR_cancer_smoking * (1 - smokers_tab[2,2])/ (1 - smokers_tab[2,1]) 
 
-OR_cancer_smoking <- RR_disease_smoking * (1 - smokers_tab[2,2])/ (1 - smokers_tab[2,1]) 
+results <- data.frame(
+  Choroba = c("Choroba niedokrwienna serca", "Rak płuc"),
+  `Różnica proporcji` = c(proportion_differences_disease_smoking, 
+                          proportion_differences_cancer_smoking),
+  RR = c(RR_disease_smoking, RR_cancer_smoking),
+  OR = c(OR_disease_smoking, OR_cancer_smoking)
+)
 
-### Z uwagi na ryzyko wzgledne, silniejszy związek to związek palenia papierosów ze śmiercią z powodu raka płuc
+xtable(results, digits = c(4, 4, 4, 4, 4))
 
 
 ##  zadanie 12. Tabela przedstawia wyniki dotycz ˛ace ´smiertelno´sci kierowców i pasa˙zerów w
@@ -393,27 +400,54 @@ OR_cancer_smoking <- RR_disease_smoking * (1 - smokers_tab[2,2])/ (1 - smokers_t
 
 
 accidents <- matrix(c(1085, 703, 55623, 441239), nrow = 2, ncol = 2)
-accidents_probs <-  accidents/sum(accidents)
+
 sum_without_seatbelts <- 1085 + 55623
 sum_seatbelts <- 703 + 441239
 sum_mortal <-  1085 + 703
 sum_immortal <- 55623 + 441239
 
+# 1.Oszacuj warunkowe prawdopodobieństwo śmierci w wypadku ze względu na
+#drugą zmienną, tj. dla kierowców i pasażerów, który użyli pasa bezpieczeństwa
+#oraz dla kierowców i pasażerów, który nie użyli pasa bezpieczeństwa
+
+# użyli pasu
 prob_death_seatbelts = 703/sum_seatbelts
+cat("Warunkowe prawdopodobieństwo śmierci z względu na pas: ", prob_death_seatbelts)
 
-prob_death_without_seatbelts = sum_without_seatbelts/sum(accidents) *  1085/sum_without_seatbelts
+# nie użyli pasu
+prob_death_without_seatbelts = 1085/sum_without_seatbelts
+cat("Warunkowe prawdopodobieństwo śmierci z względu na brak użycia pasu: ", prob_death_without_seatbelts)
 
+#Oszacuj warunkowe prawdopodobieństwo użycia pasa bezpieczeństwa ze względu
+#na drugą zmienną, tj. dla kierowców i pasażerów ze śmiertelnymi obrażeniami
+#oraz dla kierowców i pasażerów, którzy przeżyli wypadek.
 
-prob_seatbelts_death <- (sum_seatbelts*(703/sum_seatbelts)/sum(accidents))/(sum_seatbelts*(703/sum_seatbelts)/sum(accidents) + sum_without_seatbelts*(1085/sum_without_seatbelts)/sum(accidents))
+# z wypadkiem śmiertelnym
+prob_seatbelts_death <- 703/sum_mortal
+cat("Warunkowe prawdopodobieństwo użycie pasu z względu na wypadek śmiertelny: ", prob_seatbelts_death)
 
-prob_without_seatbelts_death <- (sum_without_seatbelts*(1085/sum_without_seatbelts)/sum(accidents))/(sum_seatbelts*(703/sum_seatbelts)/sum(accidents) + sum_without_seatbelts*(1085/sum_without_seatbelts)/sum(accidents))
-
+# przeżyli wypadek
+prob_seatbelts_live <- 441236/sum_immortal
+cat("Warunkowe prawdopodobieństwo użycie pasu z względu na przeżycie: ", prob_seatbelts_live)
 
 ## najbardziej naturalny wybór jest, aby wybrać zmienną objaśnianą śmiertelność wypadku - wtedy zmienna objaśniająca, czyli fakt zapięcia pasów bądź nie pozwala ustalić wiele rzeczy, takich jak, przyczyny zgonu chociazby
 
-proportion_differences_mortal<- accidents_probs[1,1] - accidents_probs[2,1]
-RR_mortal <-  accidents_probs[1,1]/accidents_probs[2,1]
-OR_mortal <-  RR_mortal * (1 - smokers_tab[2,1])/ (1 - smokers_tab[1,1]) 
+
+proportion_differences_mortal<- prob_death_without_seatbelts - prob_death_seatbelts
+RR_mortal <-  prob_death_without_seatbelts/prob_death_seatbelts
+OR_mortal <-  RR_mortal * (1 - prob_death_seatbelts)/ (1 - prob_death_without_seatbelts) 
+
+cat(" różnica proporcji: ", proportion_differences_mortal)
+cat("RR mortal: ", RR_mortal)
+cat("OR mortal: ", OR_mortal)
+
+wyniki <- data.frame(
+  "Różnica proporcji" = proportion_differences_mortal,
+  "Ryzyko względne (RR)" = RR_mortal, 
+  "Iloraz szans (OR)" = OR_mortal)
+xtable(wyniki, digits = c(4, 4, 4, 4))
+
+
 
 ##  zadanie 13. Oblicz warto´sci odpowiednich miar współzmienno´sci (współczynnik tau lub
 ##  współczynnik gamma) dla zmiennych:
