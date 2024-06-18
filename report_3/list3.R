@@ -10,6 +10,16 @@ library(MultinomialCI)
 library(matlib)
 library(DescTools)
 library(xtable)
+library(Rlab)
+library(tidyr)
+library(sjmisc)
+library(vcd)
+library(grid)
+library(graphics)
+library(ca)
+library("exact2x2")
+library(gnm)
+library(rcompanion)
 katalog = dirname(normalizePath(file.choose())) # wybiera sie plik na którym chcemy pracować, i najlepiej ten w którym są dane
 setwd(katalog)
 
@@ -300,3 +310,133 @@ r=5
 p=1-pchisq(x,r) # 0.02050225
 
 cat('P-wartosc testu IW:', p)
+
+# problem 6
+
+entire_population <- addmargins(array(data = c(117, 177, 104, 44), 
+                                      dim = c(2,2), 
+                                      dimnames = list("treatment" = c("A","B"),
+                                                      "treatment result" = c("yes","no")
+                                      )))
+entire_population
+
+
+with_comorbidities <- addmargins(array(data = c(17, 2, 101, 36), 
+                                       dim = c(2,2), 
+                                       dimnames = list("treatment" = c("A","B"),
+                                                       "treatment result" = c("yes","no")
+                                       )))
+with_comorbidities
+
+
+without_comorbidities <- addmargins(array(data = c(100, 175, 3, 8), 
+                                          dim = c(2,2), 
+                                          dimnames = list("treatment" = c("A","B"),
+                                                          "treatment result" = c("yes","no")
+                                          )))
+without_comorbidities
+
+### Probability of improvement applying A treatment 
+prob_A_entire_population <- entire_population[1,1]/entire_population[1,3]
+prob_A_with_comorbidities <- with_comorbidities[1,1]/with_comorbidities[1,3]
+prob_A_without_comorbidities <- without_comorbidities[1,1]/without_comorbidities[1,3]
+
+### Probability of improvement applying B treatment 
+prob_B_entire_population <- entire_population[2,1]/entire_population[2,3]
+prob_B_with_comorbidities <- with_comorbidities[2,1]/with_comorbidities[2,3]
+prob_B_without_comorbidities <- without_comorbidities[2,1]/without_comorbidities[2,3]
+
+probs_comparison_df <- data.frame(
+  prob_of_improvement_given_A = c(prob_A_entire_population, prob_A_with_comorbidities, prob_A_without_comorbidities),
+  prob_of_improvement_give_B  = c(prob_B_entire_population, prob_B_with_comorbidities, prob_B_without_comorbidities)
+)
+rownames(probs_comparison_df) <- c("Entire population", "With comorbidities", " Without comorbidities")
+view(probs_comparison_df)
+
+## From the results of analysis of an entire population one should think, that probability of improvement applying treatment A
+## is lower than probability of improvement applying treatment B. What is paradoxical, is the fact, that if we consider also
+## 3rd variable - fact of comorbidities presence, the direction of our relation changes. Let's test those hypotheses using prop.test
+## and check whether p_values will lead to Simspon's paradox or not.
+
+### problem 8
+
+data$CZY_KIER <- as.factor(data$CZY_KIER)
+data$PYT_2 <- as.factor(data$PYT_2)
+data$STAZ <- as.factor(data$STAZ)
+
+table_data <- xtabs(~ CZY_KIER + PYT_2 + STAZ, data = data)
+
+table_data
+addmargins(table_data)
+
+
+counts_of_combinations <- as.data.frame(as.table(table_data))
+counts_of_combinations[,-4] <- lapply(counts_of_combinations[,-4], relevel, ref = 1) #ustawiamy referencje na 1
+counts_of_combinations
+
+model_123 <-  glm(Freq ~ CZY_KIER + PYT_2 + STAZ + 
+                    (CZY_KIER*PYT_2) + 
+                    (CZY_KIER*STAZ) + 
+                    (PYT_2*STAZ) +
+                    (CZY_KIER*PYT_2*STAZ), data = counts_of_combinations, family = poisson)
+summary(model_123)
+
+model_12_23<- glm(Freq ~ CZY_KIER + PYT_2 + STAZ + 
+                    (CZY_KIER*PYT_2) + 
+                    (PYT_2*STAZ), data = counts_of_combinations, family = poisson)
+
+summary(model_12_23)
+
+fitted_models_freqs <- cbind(model_123$data, fitted(model_123), fitted(model_12_23))
+## a)
+fitted_models_freqs %>% filter(CZY_KIER == "Tak") %>% filter(PYT_2 == 2) %>% summarise(sum(Freq))/(fitted_models_freqs %>% 
+                                                                                                     filter(CZY_KIER == "Tak") %>% summarise(sum(Freq))) ## ~ 0.4814815
+
+fitted_models_freqs %>% filter(CZY_KIER == "Tak") %>% filter(PYT_2 == 2) %>% summarise(sum(`fitted(model_123)`))/(fitted_models_freqs %>% 
+                                                                                                                    filter(CZY_KIER == "Tak") %>% summarise(sum(`fitted(model_123)`))) ## ~ 0.481485
+
+fitted_models_freqs %>% filter(CZY_KIER == "Tak") %>% filter(PYT_2 == 2) %>% summarise(sum(`fitted(model_12_23)`))/(fitted_models_freqs %>% 
+                                                                                                                      filter(CZY_KIER == "Tak") %>% summarise(sum(`fitted(model_12_23)`))) ## ~ 0.4814815
+## b)
+fitted_models_freqs %>% filter(STAZ == 1) %>% filter(CZY_KIER == "Tak") %>% summarise(sum(Freq))/(fitted_models_freqs %>% 
+                                                                                                    filter(STAZ == 1) %>% summarise(sum(Freq))) ## ~ 0.02
+
+fitted_models_freqs %>% filter(STAZ == 1)  %>% filter(CZY_KIER == "Tak") %>% summarise(sum(`fitted(model_123)`))/(fitted_models_freqs %>% 
+                                                                                                                    filter(STAZ == 1) %>% summarise(sum(`fitted(model_123)`))) ## ~ 0.02
+
+fitted_models_freqs %>% filter(STAZ == 1)  %>% filter(CZY_KIER == "Tak") %>% summarise(sum(`fitted(model_12_23)`))/(fitted_models_freqs %>% 
+                                                                                                                      filter(STAZ == 1) %>% summarise(sum(`fitted(model_12_23)`))) ## ~0.12
+## c)
+1 - fitted_models_freqs %>% filter(STAZ == 3) %>% filter(CZY_KIER == "Tak") %>% summarise(sum(Freq))/(fitted_models_freqs %>% 
+                                                                                                        filter(STAZ == 3) %>% summarise(sum(Freq))) ## ~ 0.52
+
+1 - fitted_models_freqs %>% filter(STAZ == 3)  %>% filter(CZY_KIER == "Tak") %>% summarise(sum(`fitted(model_123)`))/(fitted_models_freqs %>% 
+                                                                                                                        filter(STAZ == 3) %>% summarise(sum(`fitted(model_123)`))) ## ~ 0.52
+
+1 - fitted_models_freqs %>% filter(STAZ == 3)  %>% filter(CZY_KIER == "Tak") %>% summarise(sum(`fitted(model_12_23)`))/(fitted_models_freqs %>% 
+                                                                                                                          filter(STAZ == 3) %>% summarise(sum(`fitted(model_12_23)`))) ## ~0.77
+#### zadanie 9
+## a)
+model_1 <-  glm(Freq~CZY_KIER + PYT_2 + STAZ, data = counts_of_combinations, family = poisson)
+model_2 <-  glm(Freq~(CZY_KIER + PYT_2 + STAZ)^2, data = counts_of_combinations, family = poisson)
+
+summary(model_1)
+summary(model_2)
+
+1-pchisq(deviance(model_1), df = df.residual(model_1)) # ~0.006
+test2 <- anova(model_1, model_2)
+1-pchisq(test2$Deviance[2],df = test2$Df[2]) # 2.77101e-05
+
+## b)
+
+model_3 <-  glm(Freq ~ CZY_KIER + PYT_2 + STAZ + 
+                  (CZY_KIER*PYT_2) + 
+                  (CZY_KIER*STAZ) + 
+                  (PYT_2*STAZ) +
+                  (CZY_KIER*PYT_2*STAZ), data = counts_of_combinations, family = poisson)
+
+1-pchisq(deviance(model_3), df = df.residual(model_3)) # ~ 0
+
+test2 <-  anova(model_3, model_2)
+1-pchisq(test2$Deviance[2],df = test2$Df[2]) # NaNs (?????)
+
