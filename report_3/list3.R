@@ -316,8 +316,7 @@ cat('P-wartosc testu IW:', p)
 entire_population <- addmargins(array(data = c(117, 177, 104, 44), 
                                       dim = c(2,2), 
                                       dimnames = list("treatment" = c("A","B"),
-                                                      "treatment result" = c("yes","no")
-                                      )))
+                                                      "treatment result" = c("yes","no"))))
 entire_population
 
 
@@ -352,6 +351,20 @@ probs_comparison_df <- data.frame(
 )
 rownames(probs_comparison_df) <- c("Entire population", "With comorbidities", " Without comorbidities")
 view(probs_comparison_df)
+
+binom.test(entire_population[1,1], entire_population[1,3], prob_B_entire_population,alternative = "less") ## p_val < 2e-16
+
+binom.test(with_comorbidities[1,1], with_comorbidities[1,3], prob_B_with_comorbidities,alternative = "less") ## p_val = 1
+
+binom.test(without_comorbidities[1,1], without_comorbidities[1,3], prob_B_without_comorbidities,alternative = "less") ## p_val = 0.83
+
+## Binomial test at conf.level = 0.95 allows to state, that there happens to be a Simpsons' paradox
+
+prop.test(entire_population[1,1], entire_population[1,3], prob_B_entire_population,alternative = "less") ## p_val < 2e-16
+
+prop.test(with_comorbidities[1,1], with_comorbidities[1,3], prob_B_with_comorbidities,alternative = "less") ## p_val = 1
+
+prop.test(without_comorbidities[1,1], without_comorbidities[1,3], prob_B_without_comorbidities,alternative = "less") ## p_val = 0.83
 
 ## From the results of analysis of an entire population one should think, that probability of improvement applying treatment A
 ## is lower than probability of improvement applying treatment B. What is paradoxical, is the fact, that if we consider also
