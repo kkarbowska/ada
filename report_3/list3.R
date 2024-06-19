@@ -430,26 +430,38 @@ fitted_models_freqs %>% filter(STAZ == 1)  %>% filter(CZY_KIER == "Tak") %>% sum
                                                                                                                           filter(STAZ == 3) %>% summarise(sum(`fitted(model_12_23)`))) ## ~0.77
 #### zadanie 9
 ## a)
-model_1 <-  glm(Freq~CZY_KIER + PYT_2 + STAZ, data = counts_of_combinations, family = poisson)
-model_2 <-  glm(Freq~(CZY_KIER + PYT_2 + STAZ)^2, data = counts_of_combinations, family = poisson)
+model_1_2_3 <-  glm(Freq~CZY_KIER + PYT_2 + STAZ, data = counts_of_combinations, family = poisson)
+model_12_23_13 <-  glm(Freq~(CZY_KIER + PYT_2 + STAZ)^2, data = counts_of_combinations, family = poisson)
 
-summary(model_1)
-summary(model_2)
+##testowanie bez ustalania przeciwko h1: model nie jest modelem [1 2 3]
+1-pchisq(deviance(model_1_2_3), df = df.residual(model_1_2_3)) # ~0.006
+### h1:model [12 23 13]
+test_a_1 <- anova(model_1_2_3, model_12_23_13)
+1-pchisq(test_a_1$Deviance[2],df = test_a_1$Df[2]) # 2.77101e-05
+### h1:model [123]
+test_a_2 <- anova(model_1_2_3, model_123)
+1-pchisq(test_a_2$Deviance[2],df = test_a_2$Df[2]) #0.0006
 
-1-pchisq(deviance(model_1), df = df.residual(model_1)) # ~0.006
-test2 <- anova(model_1, model_2)
-1-pchisq(test2$Deviance[2],df = test2$Df[2]) # 2.77101e-05
 
 ## b)
+model_12_3 <- glm(Freq ~ CZY_KIER + PYT_2 + STAZ +(CZY_KIER*PYT_2), data = counts_of_combinations, family = poisson)
 
-model_3 <-  glm(Freq ~ CZY_KIER + PYT_2 + STAZ + 
-                  (CZY_KIER*PYT_2) + 
-                  (CZY_KIER*STAZ) + 
-                  (PYT_2*STAZ) +
-                  (CZY_KIER*PYT_2*STAZ), data = counts_of_combinations, family = poisson)
+##testowanie bez ustalania przeciwko h1: model nie jest modelem [12 3]
+1-pchisq(deviance(model_12_3), df = df.residual(model_12_3)) # ~0.002
+##testowanie z ustalona h1: [123]
+test_b_1 <- anova(model_12_3, model_123)
+1 - pchisq(test_b_1$Deviance[2], df = test_b_1$Df[2])# ~ 0.002
+##testowanie z ustalona h1: [12 23 31]
+test_b_2 <- anova(model_12_3, model_12_23_13)
+1 - pchisq(test_b_2$Deviance[2], df = test_b_2$Df[2])# ~8.173e-05
 
-1-pchisq(deviance(model_3), df = df.residual(model_3)) # ~ 0
+## c)
+## testowanie h1: m = [123] i m !=[12 23]
+1 - pchisq(deviance(model_12_23) - deviance(model_123), df =df.residual(model_12_23) - df.residual(model_123)) #~0.047
+## testowanie h1: m = [12 23 31] i m !=[12 23]
+1 - pchisq(deviance(model_12_23) - deviance(model_12_23_13), df =df.residual(model_12_23) - df.residual(model_12_23_13)) #~0.0008
 
-test2 <-  anova(model_3, model_2)
-1-pchisq(test2$Deviance[2],df = test2$Df[2]) # NaNs (?????)
+### modele [123] i [12 23] biorę z zadania 8!
+
+
 
